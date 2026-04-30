@@ -1,0 +1,125 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+enum Rol {
+  empleado
+  rrhh
+  supervisor
+}
+
+enum TipoMarcacion {
+  entrada
+  salida
+}
+
+enum FormatoReporte {
+  pdf
+  excel
+}
+
+enum TipoTurno {
+  fijo
+  rotativo
+  flexible
+}
+
+model Usuario {
+  id            Int        @id @default(autoincrement())
+  nombre        String
+  correo        String     @unique
+  password_hash String
+  rol           Rol        @default(empleado)
+  activo        Boolean    @default(true)
+  creado_en     DateTime   @default(now())
+  actualizado_en DateTime  @updatedAt
+
+  empleado      Empleado?
+  reportes      Reporte[]
+
+  @@map("usuarios")
+}
+
+model HorarioLaboral {
+  id                  Int        @id @default(autoincrement())
+  nombre              String
+  hora_entrada        String
+  hora_salida         String
+  dias_laborales      Int[]
+  minutos_tolerancia  Int        @default(5)
+  tipo_turno          TipoTurno  @default(fijo)
+  creado_en           DateTime   @default(now())
+
+  empleados           Empleado[]
+
+  @@map("horarios_laborales")
+}
+
+model Empleado {
+  id           Int            @id @default(autoincrement())
+  usuario_id   Int            @unique
+  rut          String         @unique
+  cargo        String
+  departamento String
+  horario_id   Int
+  creado_en    DateTime       @default(now())
+
+  usuario      Usuario        @relation(fields: [usuario_id], references: [id])
+  horario      HorarioLaboral @relation(fields: [horario_id], references: [id])
+  marcaciones  Marcacion[]
+  asistencia   Asistencia[]
+
+  @@map("empleados")
+}
+
+model Marcacion {
+  id            Int           @id @default(autoincrement())
+  empleado_id   Int
+  tipo          TipoMarcacion
+  fecha_hora    DateTime      @default(now())
+  latitud       Decimal?      @db.Decimal(10, 8)
+  longitud      Decimal?      @db.Decimal(11, 8)
+  zona_permitida Boolean      @default(false)
+  estado        String        @default("pendiente")
+  creado_en     DateTime      @default(now())
+
+  empleado      Empleado      @relation(fields: [empleado_id], references: [id])
+
+  @@map("marcaciones")
+}
+
+model Asistencia {
+  id              Int      @id @default(autoincrement())
+  empleado_id     Int
+  fecha           DateTime @db.Date
+  horas_trabajadas Decimal? @db.Decimal(5, 2)
+  horas_extra     Decimal? @db.Decimal(5, 2)
+  atraso          Boolean  @default(false)
+  observacion     String?
+  creado_en       DateTime @default(now())
+
+  empleado        Empleado @relation(fields: [empleado_id], references: [id])
+
+  @@unique([empleado_id, fecha])
+  @@map("asistencia")
+}
+
+model Reporte {
+  id               Int            @id @default(autoincrement())
+  generado_por     Int
+  fecha_inicio     DateTime       @db.Date
+  fecha_fin        DateTime       @db.Date
+  tipo_reporte     String
+  formato          FormatoReporte
+  url_archivo      String?
+  fecha_generacion DateTime       @default(now())
+
+  usuario          Usuario        @relation(fields: [generado_por], references: [id])
+
+  @@map("reportes")
+}
