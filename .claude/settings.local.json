@@ -1,0 +1,19 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(git init *)",
+      "Bash(git add *)",
+      "Bash(git commit *)",
+      "Bash(git checkout *)",
+      "Bash(git rm *)",
+      "Bash(mkdir -p \"C:/Users/Ivan Gonzalez/Desktop/GOTEST/mockups/lib\")",
+      "Bash(mkdir -p \"C:/Users/Ivan Gonzalez/Desktop/GOTEST/pwa-config\")",
+      "Bash(npm install *)",
+      "Bash(npm run *)",
+      "Bash(curl -s -o /dev/null -w \"%{http_code}\" http://localhost:5173)",
+      "mcp__ide__getDiagnostics",
+      "Bash(cp \"C:/Users/Ivan Gonzalez/Desktop/GOTEST/mockups/LoginPage.tsx\" \"C:/Users/Ivan Gonzalez/Desktop/GOTEST/viewer/src/LoginPage.tsx\")",
+      "Bash(cp \"C:/Users/Ivan Gonzalez/Desktop/GOTEST/mockups/MobileAuth.tsx\" \"C:/Users/Ivan Gonzalez/Desktop/GOTEST/viewer/src/MobileAuth.tsx\")"
+    ]
+  }
+}
