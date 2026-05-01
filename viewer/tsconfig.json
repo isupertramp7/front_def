@@ -13,7 +13,11 @@
     "jsx": "react-jsx",
     "strict": false,
     "paths": {
-      "@mockups/*": ["../mockups/*"]
+      "@mockups/*": ["../mockups/*"],
+      "react": ["./node_modules/react"],
+      "react/jsx-runtime": ["./node_modules/react/jsx-runtime"],
+      "react-dom": ["./node_modules/react-dom"],
+      "react-dom/client": ["./node_modules/react-dom/client"]
     }
   },
   "include": ["src", "../mockups"],

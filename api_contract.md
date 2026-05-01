@@ -6,7 +6,51 @@
 
 ---
 
-## Auth — WebAuthn / Passkeys
+## Auth
+
+### POST /auth/login
+Autenticación clásica con credenciales. Acepta RUT o correo como identificador.
+
+**Request**
+```json
+{
+  "identifier": "12345678-9",
+  "password": "clave_segura_123"
+}
+```
+> `identifier`: RUT (`"12345678-9"`) o correo (`"usuario@empresa.cl"`)
+
+**Response 200**
+```json
+{
+  "token": "eyJhbGciOiJIUzI1NiJ9...",
+  "expiresIn": 28800,
+  "user": {
+    "id": "usr_01HX",
+    "rut": "12345678-9",
+    "email": "usuario@empresa.cl",
+    "name": "Cristian Florez Revilla",
+    "role": "employee",
+    "siteId": "site_01"
+  }
+}
+```
+
+**Response 401**
+```json
+{ "error": "INVALID_CREDENTIALS" }
+```
+
+**Response 400**
+```json
+{ "error": "VALIDATION_ERROR", "fields": { "identifier": "Formato inválido" } }
+```
+
+---
+
+## Auth — WebAuthn / Passkeys (Step-up)
+
+> **Flujo de step-up:** Estos endpoints **no** se usan al hacer login inicial. Se invocan como verificación biométrica adicional justo antes de enviar `POST /punches`. El cliente solicita el challenge, obtiene la assertion del dispositivo (huella/FaceID), la verifica con `/auth/verify`, y sólo si la respuesta es `200` procede a registrar la marcación.
 
 ### POST /auth/challenge
 Genera challenge para autenticación con passkey (WebAuthn `navigator.credentials.get`).
@@ -192,8 +236,60 @@ Retorna un sitio específico.
 
 ## Punches
 
+### Flujo de foto en marcación — Decisión de arquitectura
+
+El flujo de marcación requiere una selfie obligatoria. Se evaluaron dos enfoques:
+
+| Enfoque | Pros | Contras |
+|---------|------|---------|
+| `multipart/form-data` directo al endpoint | Un solo request | Lambda tiene límite de 6 MB payload en API Gateway; binarios grandes fallan |
+| **Presigned URL (recomendado)** | Upload directo cliente→S3, sin pasar por Lambda | Requiere 2 requests |
+
+**Enfoque adoptado: Presigned URL**
+
+```
+1. POST /punches/presigned-url  →  { uploadUrl, photoKey }
+2. PUT {uploadUrl}  ← blob de la foto (directo a S3, sin auth header)
+3. POST /punches  ← { ..., photoKey }
+```
+
+Ventajas concretas:
+- Lambda no toca el binario → sin límite de payload
+- Upload paralelo y más rápido (S3 multiregional)
+- Costo menor (evita ingress/egress de Lambda)
+- S3 aplica lifecycle para expirar fotos antiguas sin código extra
+
+---
+
+### POST /punches/presigned-url
+Genera URL prefirmada para subir la selfie directamente a S3.
+
+**Headers:** `Authorization: Bearer <jwt>`
+
+**Request**
+```json
+{
+  "contentType": "image/jpeg"
+}
+```
+
+**Response 200**
+```json
+{
+  "uploadUrl": "https://gotest-punches.s3.amazonaws.com/photos/usr_01HX/2026-04-29T08:41:00Z.jpg?X-Amz-Signature=...",
+  "photoKey": "photos/usr_01HX/2026-04-29T08:41:00Z.jpg",
+  "expiresIn": 120
+}
+```
+
+> El cliente hace `PUT {uploadUrl}` con el blob directamente a S3 (sin `Authorization` header). Expiración: 2 minutos.
+
+---
+
 ### POST /punches
-Registra una marcación. Valida geofence server-side antes de persistir.
+Registra una marcación. Valida geofence server-side antes de persistir. Requiere que la foto ya esté subida a S3 (ver `POST /punches/presigned-url`).
+
+> **Prerequisito WebAuthn:** Antes de invocar este endpoint, el cliente debe completar el flujo `POST /auth/challenge` → `POST /auth/verify` (biometría step-up). El `webAuthnToken` retornado por `/auth/verify` se incluye en el payload para validación server-side.
 
 **Headers:** `Authorization: Bearer <jwt>`
 
@@ -206,10 +302,14 @@ Registra una marcación. Valida geofence server-side antes de persistir.
   "lng": -70.6364,
   "accuracy": 12.5,
   "deviceId": "device_fingerprint_hash",
-  "timestamp": "2026-04-29T08:41:00-04:00"
+  "timestamp": "2026-04-29T08:41:00-04:00",
+  "photoKey": "photos/usr_01HX/2026-04-29T08:41:00Z.jpg",
+  "webAuthnToken": "eyJ0eXBlIjoid2ViYXV0aG4..."
 }
 ```
-> `type`: `"entrada"` | `"salida"` | `"salida_colacion"` | `"entrada_colacion"`
+> `type`: `"entrada"` | `"salida"` | `"salida_colacion"` | `"entrada_colacion"`  
+> `photoKey`: clave S3 retornada por `/punches/presigned-url`  
+> `webAuthnToken`: token opaco emitido por `/auth/verify` (TTL 5 min, single-use)
 
 **Response 201**
 ```json
@@ -221,7 +321,8 @@ Registra una marcación. Valida geofence server-side antes de persistir.
   "recordedAt": "2026-04-29T08:41:00-04:00",
   "distanceMeters": 38,
   "isWithinGeofence": true,
-  "shiftId": "shift_01"
+  "shiftId": "shift_01",
+  "photoUrl": "https://gotest-punches.s3.amazonaws.com/photos/usr_01HX/2026-04-29T08:41:00Z.jpg"
 }
 ```
 
@@ -243,6 +344,11 @@ Registra una marcación. Valida geofence server-side antes de persistir.
     "recordedAt": "2026-04-29T08:41:00-04:00"
   }
 }
+```
+
+**Response 401 — WebAuthn inválido**
+```json
+{ "error": "WEBAUTHN_TOKEN_INVALID" }
 ```
 
 ---
@@ -372,5 +478,5 @@ Genera reporte .xlsx y retorna URL prefirmada de S3.
 - **API Gateway** → HTTP API (v2) con JWT Authorizer apuntando a Cognito o Lambda custom auth
 - **Lambda** → Node 20, 512 MB, timeout 10s (punches/auth), 30s (reports/export)
 - **DynamoDB** → Tabla `punches` con PK=`userId` SK=`timestamp`, GSI por `siteId+date`
-- **S3** → Bucket `gotest-reports`, lifecycle 24h para archivos de exportación
+- **S3** → Bucket `gotest-reports` (lifecycle 24h para exports); Bucket `gotest-punches` (fotos de selfies, presigned PUT desde cliente, lifecycle 90d)
 - **CloudWatch** → Alarmas en error rate >1% y latencia p99 >2s

@@ -13,7 +13,15 @@
       "Bash(curl -s -o /dev/null -w \"%{http_code}\" http://localhost:5173)",
       "mcp__ide__getDiagnostics",
       "Bash(cp \"C:/Users/Ivan Gonzalez/Desktop/GOTEST/mockups/LoginPage.tsx\" \"C:/Users/Ivan Gonzalez/Desktop/GOTEST/viewer/src/LoginPage.tsx\")",
-      "Bash(cp \"C:/Users/Ivan Gonzalez/Desktop/GOTEST/mockups/MobileAuth.tsx\" \"C:/Users/Ivan Gonzalez/Desktop/GOTEST/viewer/src/MobileAuth.tsx\")"
+      "Bash(cp \"C:/Users/Ivan Gonzalez/Desktop/GOTEST/mockups/MobileAuth.tsx\" \"C:/Users/Ivan Gonzalez/Desktop/GOTEST/viewer/src/MobileAuth.tsx\")",
+      "Bash(Get-ChildItem -Path \"C:\\\\Users\\\\Ivan Gonzalez\\\\Desktop\\\\GOTEST\\\\client\" -Exclude \"node_modules\" -Recurse)",
+      "Bash(Select-Object FullName)",
+      "PowerShell(ls \"C:\\\\Users\\\\Ivan Gonzalez\\\\Desktop\\\\GOTEST\\\\client\" | Where-Object { $_.Name -ne \"node_modules\" })",
+      "PowerShell(cmd /c \"dir \"\"C:\\\\Users\\\\Ivan Gonzalez\\\\Desktop\\\\GOTEST\\\\mockups\\\\lib\"\"\")",
+      "Bash(npx tsc *)",
+      "Bash(Get-ChildItem -Path \"client\" -Force)",
+      "Bash(Select-Object Name)",
+      "Bash(cat C:\\\\\\\\Users\\\\\\\\IVANGO~1\\\\\\\\AppData\\\\\\\\Local\\\\\\\\Temp\\\\\\\\claude\\\\\\\\C--Users-Ivan-Gonzalez-Desktop-GOTEST\\\\\\\\27d3cca8-98f8-4087-8093-03726d57c2fa\\\\\\\\tasks\\\\\\\\bl551g2yt.output)"
     ]
   }
 }
