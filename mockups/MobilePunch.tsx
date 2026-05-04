@@ -471,8 +471,8 @@ export default function MobilePunch() {
 
   return (
     /* ── Layout: flex column, NO fixed nav ── */
-    <div className="flex flex-col max-w-sm mx-auto"
-         style={{ height: "100dvh", fontFamily: "Poppins, sans-serif", background: "#0A111E" }}>
+    <div className="flex flex-col w-full"
+         style={{ height: "100%", fontFamily: "Poppins, sans-serif", background: "#0A111E" }}>
 
       {showCamera && <CameraModal onCapture={handleCameraCapture} onCancel={handleCameraCancel}/>}
 
@@ -677,30 +677,43 @@ export default function MobilePunch() {
         )}
       </div>
 
-      {/* ── Bottom nav — sticky (NO fixed) ── */}
-      <div className="flex-shrink-0 flex"
-           style={{ background: "#070E1A", borderTop: "1px solid rgba(255,255,255,0.06)" }}>
-        {tabItems.map(({ id, label, d }) => {
-          const active = tab === id;
-          return (
-            <button key={id} onClick={() => setTab(id)}
-              className="flex-1 flex flex-col items-center py-3 gap-0.5 relative transition-colors"
-              style={{ background: active ? "rgba(41,137,216,0.07)" : "transparent" }}>
-              {active && (
-                <span className="absolute top-0 inset-x-0 h-0.5 rounded-full"
-                      style={{ background: G.btn }}/>
-              )}
-              <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"
-                   style={{ color: active ? "#7db9e8" : "rgba(255,255,255,0.2)" }}>
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d={d}/>
-              </svg>
-              <span className="text-[10px] font-medium"
-                    style={{ color: active ? "#7db9e8" : "rgba(255,255,255,0.2)" }}>
-                {label}
-              </span>
-            </button>
-          );
-        })}
+      {/* ── Floating Dock ── */}
+      <div className="flex-shrink-0 flex flex-col items-center pb-5 pt-2 relative"
+           style={{ background: "#0A111E" }}>
+        <div className="absolute top-0 left-1/2 -translate-x-1/2 w-56 h-px pointer-events-none"
+             style={{ background: "linear-gradient(90deg, transparent, rgba(41,137,216,0.18), transparent)" }}/>
+        <div className="flex items-center gap-1 p-1.5 rounded-full"
+             style={{
+               background: "rgba(10,17,30,0.92)",
+               backdropFilter: "blur(24px)",
+               WebkitBackdropFilter: "blur(24px)",
+               border: "1px solid rgba(255,255,255,0.08)",
+               boxShadow: "0 4px 28px rgba(0,0,0,0.65), 0 0 48px rgba(41,137,216,0.06), 0 1px 0 rgba(255,255,255,0.04) inset",
+             }}>
+          {tabItems.map(({ id, label, d }) => {
+            const active = tab === id;
+            return (
+              <button key={id} onClick={() => setTab(id)}
+                className="relative flex flex-col items-center justify-center gap-0.5 rounded-full transition-all active:scale-90"
+                style={{
+                  padding: "10px 20px",
+                  minWidth: "4.5rem",
+                  background: active ? "rgba(41,137,216,0.18)" : "transparent",
+                  border: `1px solid ${active ? "rgba(41,137,216,0.32)" : "transparent"}`,
+                  boxShadow: active ? "0 0 18px rgba(41,137,216,0.22)" : "none",
+                }}>
+                <svg className="w-[18px] h-[18px]" fill="none" stroke="currentColor" viewBox="0 0 24 24"
+                     style={{ color: active ? "#7db9e8" : "rgba(255,255,255,0.30)" }}>
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={active ? 2 : 1.5} d={d}/>
+                </svg>
+                <span className="text-[9px] font-semibold tracking-wide"
+                      style={{ color: active ? "#7db9e8" : "rgba(255,255,255,0.22)" }}>
+                  {label}
+                </span>
+              </button>
+            );
+          })}
+        </div>
       </div>
     </div>
   );

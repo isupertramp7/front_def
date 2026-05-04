@@ -60,7 +60,7 @@ export default function App() {
           <div className="flex justify-center items-start py-8 min-h-screen bg-[#0c1e3c]">
             {/* Phone frame */}
             <div
-              className="w-[390px] min-h-[780px] rounded-[2.5rem] overflow-hidden shadow-2xl"
+              className="w-[390px] h-[844px] rounded-[2.5rem] overflow-hidden shadow-2xl"
               style={{ border: '6px solid #1e5799', boxShadow: '0 30px 80px rgba(41,137,216,0.25)' }}
             >
               {view === "auth"  && <MobileAuth />}
