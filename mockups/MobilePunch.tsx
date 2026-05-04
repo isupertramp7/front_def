@@ -8,11 +8,11 @@ const G = {
   hero: 'linear-gradient(160deg, #060F22 0%, #0B1F3E 55%, #102A54 100%)',
 } as const;
 
-const MOCK_USER = { name: "Cristian Florez Revilla", siteId: "site_01" };
+const MOCK_USER = { name: "Colaborar", siteId: "site_01" };
 const MOCK_SITE = {
-  name: "ASTRO SPA",
+  name: "GO",
   lat: -33.4372, lng: -70.6366, radiusMeters: 500,
-  shift: { start: "08:30", end: "18:00", breakMinutes: 45 },
+  shift: { start: "08:00", end: "17:30", breakMinutes: 60 },
 };
 const MOCK_USER_LOCATION = { lat: -33.4370, lng: -70.6364 };
 

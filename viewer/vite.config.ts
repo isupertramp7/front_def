@@ -9,4 +9,9 @@ export default defineConfig({
       "@mockups": path.resolve(__dirname, "../mockups"),
     },
   },
+  server: {
+    watch: {
+      ignored: ["!**/mockups/**"],
+    },
+  },
 });

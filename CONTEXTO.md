@@ -153,7 +153,7 @@ WebAuthn es step-up justo antes del punch (no es el login inicial).
 
 ## Datos mock usados en mockups
 
-- Empresa: **ASTRO SPA**
-- Sitios: Casa Matriz, Sucursal Norte, Sucursal Sur, Bodega Central (inactiva)
-- 9 empleados con datos realistas chilenos (RUT, correo @astrospa.cl)
-- Turno principal: 08:30–18:00, 45 min colación
+- Empresa: **Go tecnologia**
+- Sitios: GO, Kaufmann Pajaritos, Soprole Vitacura, Sura, Komatsu, Soprole renca (inactiva)
+- 9 empleados con datos realistas chilenos (RUT, correo @goalliance.cl)
+- Turno principal: lunes a viernes 08:00–17:30, 1 hora de colación

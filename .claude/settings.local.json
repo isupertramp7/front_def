@@ -23,7 +23,17 @@
       "Bash(Select-Object Name)",
       "Bash(cat C:\\\\\\\\Users\\\\\\\\IVANGO~1\\\\\\\\AppData\\\\\\\\Local\\\\\\\\Temp\\\\\\\\claude\\\\\\\\C--Users-Ivan-Gonzalez-Desktop-GOTEST\\\\\\\\27d3cca8-98f8-4087-8093-03726d57c2fa\\\\\\\\tasks\\\\\\\\bl551g2yt.output)",
       "PowerShell(Get-ChildItem -Path \"C:\\\\Users\\\\Ivan Gonzalez\\\\Desktop\\\\GOTEST\" -Recurse -File | Where-Object { $_.FullName -notmatch \"node_modules\" } | Select-Object -ExpandProperty FullName)",
-      "PowerShell(git *)"
+      "PowerShell(git *)",
+      "Bash(Get-ChildItem -Path \"C:\\\\Users\\\\Ivan Gonzalez\\\\Desktop\\\\GOTEST\" -Force)",
+      "Bash(Select-Object Name, PSIsContainer)",
+      "PowerShell(Set-Location \"C:\\\\Users\\\\Ivan Gonzalez\\\\Desktop\\\\GOTEST\"; Get-ChildItem -Force | ForEach-Object { $_.Name })",
+      "PowerShell(Head *)",
+      "PowerShell(ls \"C:\\\\Users\\\\Ivan Gonzalez\\\\Desktop\\\\GOTEST\\\\client\" | Where-Object { -not $_.Name.StartsWith\\('node_modules'\\) } | ForEach-Object { $_.Name })",
+      "PowerShell(ls \"C:\\\\Users\\\\Ivan Gonzalez\\\\Desktop\\\\GOTEST\\\\viewer\" | ForEach-Object { $_.Name })",
+      "PowerShell(ls \"C:\\\\Users\\\\Ivan Gonzalez\\\\Desktop\\\\GOTEST\\\\mockups\" | ForEach-Object { $_.Name })",
+      "PowerShell(ls \"C:\\\\Users\\\\Ivan Gonzalez\\\\Desktop\\\\GOTEST\\\\pwa-config\" | ForEach-Object { $_.Name })",
+      "PowerShell(netstat *)",
+      "PowerShell(Stop-Process *)"
     ]
   }
 }

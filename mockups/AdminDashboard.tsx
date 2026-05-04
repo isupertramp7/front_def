@@ -34,32 +34,34 @@ interface Site {
 }
 
 const ATT_DATA: AttRecord[] = [
-  { id:"1", name:"Cristian Florez Revilla",  rut:"12.345.678-9",  site:"Casa Matriz",    date:"29-04-2026", entrada:"08:41", salidaColacion:"14:26", entradaColacion:"15:13", salida:"18:05", horasTrabajadas:"08:45", minutosAtraso:11, status:"late" },
-  { id:"2", name:"María González Silva",     rut:"10.234.567-K",  site:"Sucursal Norte", date:"29-04-2026", entrada:"08:29", salidaColacion:"13:00", entradaColacion:"13:45", salida:"18:00", horasTrabajadas:"09:16", minutosAtraso:0,  status:"overtime" },
-  { id:"3", name:"Pedro Ramírez Torres",     rut:"15.678.901-2",  site:"Casa Matriz",    date:"29-04-2026", entrada:null,    salidaColacion:null,    entradaColacion:null,    salida:null,    horasTrabajadas:null,    minutosAtraso:0,  status:"absent" },
-  { id:"4", name:"Ana López Muñoz",          rut:"13.456.789-3",  site:"Sucursal Sur",   date:"29-04-2026", entrada:"08:30", salidaColacion:"13:15", entradaColacion:"14:00", salida:"17:55", horasTrabajadas:"08:40", minutosAtraso:0,  status:"on_time" },
-  { id:"5", name:"Carlos Vega Mora",         rut:"11.223.344-5",  site:"Casa Matriz",    date:"29-04-2026", entrada:"09:15", salidaColacion:"14:00", entradaColacion:"14:45", salida:"18:10", horasTrabajadas:"08:10", minutosAtraso:45, status:"late" },
-  { id:"6", name:"Valeria Reyes Castro",     rut:"17.890.123-6",  site:"Sucursal Norte", date:"29-04-2026", entrada:"08:32", salidaColacion:"13:30", entradaColacion:"14:15", salida:"18:02", horasTrabajadas:"08:45", minutosAtraso:2,  status:"on_time" },
-  { id:"7", name:"Andrés Muñoz Pinto",       rut:"14.567.890-7",  site:"Sucursal Sur",   date:"29-04-2026", entrada:"08:28", salidaColacion:"13:10", entradaColacion:"13:55", salida:"19:00", horasTrabajadas:"10:12", minutosAtraso:0,  status:"overtime" },
+  { id:"1", name:"Ivan Alejandro Rojas",  rut:"12.345.678-9",  site:"GO",                 date:"29-04-2026", entrada:"08:11", salidaColacion:"13:11", entradaColacion:"14:11", salida:"17:35", horasTrabajadas:"08:44", minutosAtraso:11, status:"late" },
+  { id:"2", name:"Isabel Rojas Eneros",   rut:"10.234.567-K",  site:"Kaufmann Pajaritos", date:"29-04-2026", entrada:"08:00", salidaColacion:"12:45", entradaColacion:"13:45", salida:"18:00", horasTrabajadas:"09:15", minutosAtraso:0,  status:"overtime" },
+  { id:"3", name:"Cristian Teran",        rut:"15.678.901-2",  site:"GO",                 date:"29-04-2026", entrada:null,    salidaColacion:null,    entradaColacion:null,    salida:null,    horasTrabajadas:null,    minutosAtraso:0,  status:"absent" },
+  { id:"4", name:"Marcelo Matamala",      rut:"13.456.789-3",  site:"Soprole Vitacura",   date:"29-04-2026", entrada:"08:00", salidaColacion:"13:00", entradaColacion:"14:00", salida:"17:25", horasTrabajadas:"08:35", minutosAtraso:0,  status:"on_time" },
+  { id:"5", name:"Nicolas Sepulveda",     rut:"11.223.344-5",  site:"GO",                 date:"29-04-2026", entrada:"08:45", salidaColacion:"13:30", entradaColacion:"14:30", salida:"17:40", horasTrabajadas:"08:10", minutosAtraso:45, status:"late" },
+  { id:"6", name:"Pablo Sepulveda",       rut:"17.890.123-6",  site:"Kaufmann Pajaritos", date:"29-04-2026", entrada:"08:02", salidaColacion:"13:00", entradaColacion:"14:00", salida:"17:32", horasTrabajadas:"08:45", minutosAtraso:2,  status:"on_time" },
+  { id:"7", name:"Fernanda Teran",        rut:"14.567.890-7",  site:"Sura",               date:"29-04-2026", entrada:"07:58", salidaColacion:"12:58", entradaColacion:"13:58", salida:"19:00", horasTrabajadas:"10:17", minutosAtraso:0,  status:"overtime" },
 ];
 
 const EMP_DATA: Employee[] = [
-  { id:"1", name:"Cristian Florez Revilla",  rut:"12.345.678-9",  email:"c.florez@astrospa.cl",    site:"Casa Matriz",    role:"Empleado",       status:"activo",   lastLogin:"hoy 08:41",    hasDevice:true  },
-  { id:"2", name:"María González Silva",     rut:"10.234.567-K",  email:"m.gonzalez@astrospa.cl",  site:"Sucursal Norte", role:"Empleado",       status:"activo",   lastLogin:"hoy 08:29",    hasDevice:true  },
-  { id:"3", name:"Pedro Ramírez Torres",     rut:"15.678.901-2",  email:"p.ramirez@astrospa.cl",   site:"Casa Matriz",    role:"Empleado",       status:"activo",   lastLogin:"ayer 18:00",   hasDevice:false },
-  { id:"4", name:"Ana López Muñoz",          rut:"13.456.789-3",  email:"a.lopez@astrospa.cl",     site:"Sucursal Sur",   role:"Supervisor",     status:"activo",   lastLogin:"hoy 08:30",    hasDevice:true  },
-  { id:"5", name:"Carlos Vega Mora",         rut:"11.223.344-5",  email:"c.vega@astrospa.cl",      site:"Casa Matriz",    role:"Empleado",       status:"activo",   lastLogin:"hoy 09:15",    hasDevice:true  },
-  { id:"6", name:"Valeria Reyes Castro",     rut:"17.890.123-6",  email:"v.reyes@astrospa.cl",     site:"Sucursal Norte", role:"Empleado",       status:"activo",   lastLogin:"hoy 08:32",    hasDevice:true  },
-  { id:"7", name:"Andrés Muñoz Pinto",       rut:"14.567.890-7",  email:"a.munoz@astrospa.cl",     site:"Sucursal Sur",   role:"Empleado",       status:"activo",   lastLogin:"hoy 08:28",    hasDevice:true  },
-  { id:"8", name:"Sofía Herrera Lagos",      rut:"18.901.234-8",  email:"s.herrera@astrospa.cl",   site:"Casa Matriz",    role:"Administrador",  status:"activo",   lastLogin:"hoy 07:55",    hasDevice:true  },
-  { id:"9", name:"Rodrigo Fuentes Vera",     rut:"16.789.012-9",  email:"r.fuentes@astrospa.cl",   site:"Sucursal Norte", role:"Empleado",       status:"inactivo", lastLogin:"hace 30 días", hasDevice:false },
+  { id:"1", name:"Ivan Alejandro Rojas",  rut:"12.345.678-9",  email:"i.rojas@goalliance.cl",      site:"GO",                 role:"Empleado",       status:"activo",   lastLogin:"hoy 08:11",    hasDevice:true  },
+  { id:"2", name:"Isabel Rojas Eneros",   rut:"10.234.567-K",  email:"i.rojas.e@goalliance.cl",    site:"Kaufmann Pajaritos", role:"Empleado",       status:"activo",   lastLogin:"hoy 08:00",    hasDevice:true  },
+  { id:"3", name:"Cristian Teran",        rut:"15.678.901-2",  email:"c.teran@goalliance.cl",      site:"GO",                 role:"Empleado",       status:"activo",   lastLogin:"ayer 17:30",   hasDevice:false },
+  { id:"4", name:"Marcelo Matamala",      rut:"13.456.789-3",  email:"m.matamala@goalliance.cl",   site:"Soprole Vitacura",   role:"Supervisor",     status:"activo",   lastLogin:"hoy 08:00",    hasDevice:true  },
+  { id:"5", name:"Nicolas Sepulveda",     rut:"11.223.344-5",  email:"n.sepulveda@goalliance.cl",  site:"GO",                 role:"Empleado",       status:"activo",   lastLogin:"hoy 08:45",    hasDevice:true  },
+  { id:"6", name:"Pablo Sepulveda",       rut:"17.890.123-6",  email:"p.sepulveda@goalliance.cl",  site:"Kaufmann Pajaritos", role:"Empleado",       status:"activo",   lastLogin:"hoy 08:02",    hasDevice:true  },
+  { id:"7", name:"Fernanda Teran",        rut:"14.567.890-7",  email:"f.teran@goalliance.cl",      site:"Sura",               role:"Empleado",       status:"activo",   lastLogin:"hoy 07:58",    hasDevice:true  },
+  { id:"8", name:"Sofía Herrera Lagos",   rut:"18.901.234-8",  email:"s.herrera@goalliance.cl",    site:"GO",                 role:"Administrador",  status:"activo",   lastLogin:"hoy 07:50",    hasDevice:true  },
+  { id:"9", name:"Rodrigo Fuentes Vera",  rut:"16.789.012-9",  email:"r.fuentes@goalliance.cl",    site:"Komatsu",            role:"Empleado",       status:"inactivo", lastLogin:"hace 30 días", hasDevice:false },
 ];
 
 const SITES_DATA: Site[] = [
-  { id:"s1", name:"Casa Matriz",    address:"Av. Providencia 1234, Santiago", lat:-33.4372, lng:-70.6366, radiusMeters:500, employeeCount:4, punchesToday:3, active:true  },
-  { id:"s2", name:"Sucursal Norte", address:"Av. Recoleta 890, Santiago",     lat:-33.3952, lng:-70.6420, radiusMeters:500, employeeCount:3, punchesToday:3, active:true  },
-  { id:"s3", name:"Sucursal Sur",   address:"Av. Vicuña Mackenna 456, RM",   lat:-33.4900, lng:-70.6100, radiusMeters:300, employeeCount:2, punchesToday:2, active:true  },
-  { id:"s4", name:"Bodega Central", address:"Camino Lo Boza 160, Pudahuel",   lat:-33.3900, lng:-70.7800, radiusMeters:800, employeeCount:0, punchesToday:0, active:false },
+  { id:"s1", name:"GO",                 address:"Av. Providencia 1234, Santiago",   lat:-33.4372, lng:-70.6366, radiusMeters:500, employeeCount:4, punchesToday:3, active:true  },
+  { id:"s2", name:"Kaufmann Pajaritos", address:"Av. Pajaritos 2000, Maipú",        lat:-33.5100, lng:-70.7500, radiusMeters:500, employeeCount:3, punchesToday:3, active:true  },
+  { id:"s3", name:"Soprole Vitacura",   address:"Av. Vitacura 3456, Vitacura",      lat:-33.4050, lng:-70.5980, radiusMeters:500, employeeCount:2, punchesToday:2, active:true  },
+  { id:"s4", name:"Sura",               address:"Av. Apoquindo 3000, Las Condes",   lat:-33.4180, lng:-70.5970, radiusMeters:500, employeeCount:1, punchesToday:1, active:true  },
+  { id:"s5", name:"Komatsu",            address:"Av. Las Industrias 500, Pudahuel", lat:-33.3900, lng:-70.7800, radiusMeters:500, employeeCount:1, punchesToday:0, active:true  },
+  { id:"s6", name:"Soprole renca",      address:"Av. Renca 100, Renca",             lat:-33.3950, lng:-70.7100, radiusMeters:500, employeeCount:0, punchesToday:0, active:false },
 ];
 
 const WEEKLY = [
@@ -71,14 +73,14 @@ const WEEKLY = [
 ];
 
 const RECENT_PUNCHES = [
-  { name:"María González",  type:"salida",   time:"18:00", site:"Sucursal Norte" },
-  { name:"Andrés Muñoz",    type:"salida",   time:"19:00", site:"Sucursal Sur"   },
-  { name:"Valeria Reyes",   type:"salida",   time:"18:02", site:"Sucursal Norte" },
-  { name:"Cristian Florez", type:"salida",   time:"18:05", site:"Casa Matriz"    },
-  { name:"Carlos Vega",     type:"salida",   time:"18:10", site:"Casa Matriz"    },
+  { name:"Isabel Rojas",    type:"salida",   time:"18:00", site:"Kaufmann Pajaritos" },
+  { name:"Fernanda Teran",  type:"salida",   time:"19:00", site:"Sura"               },
+  { name:"Pablo Sepulveda", type:"salida",   time:"17:32", site:"Kaufmann Pajaritos" },
+  { name:"Ivan Rojas",      type:"salida",   time:"17:35", site:"GO"                 },
+  { name:"Nicolas Sepulveda", type:"salida", time:"17:40", site:"GO"                 },
 ];
 
-const SITES    = ["Todos", "Casa Matriz", "Sucursal Norte", "Sucursal Sur"];
+const SITES    = ["Todos", "GO", "Kaufmann Pajaritos", "Soprole Vitacura", "Sura", "Komatsu"];
 const ATT_STATUS_META = {
   on_time:  { label:"A tiempo",  bg:"#ecfdf5", color:"#065f46", dot:"#10b981" },
   late:     { label:"Atraso",    bg:"#fff7ed", color:"#92400e", dot:"#f59e0b" },
@@ -914,9 +916,9 @@ function AjustesView() {
             <div className="flex flex-col gap-5 max-w-md">
               <p className="text-sm font-semibold text-gray-900">Información de la empresa</p>
               {[
-                { label:"Nombre empresa",    placeholder:"ASTRO SPA",              type:"text"  },
+                { label:"Nombre empresa",    placeholder:"Go tecnologia",           type:"text"  },
                 { label:"RUT empresa",       placeholder:"76.123.456-7",            type:"text"  },
-                { label:"Correo de contacto",placeholder:"admin@astrospa.cl",       type:"email" },
+                { label:"Correo de contacto",placeholder:"admin@goalliance.cl",    type:"email" },
                 { label:"Teléfono",          placeholder:"+56 2 2345 6789",         type:"tel"   },
               ].map(({ label, placeholder, type }) => (
                 <div key={label} className="flex flex-col gap-1.5">
@@ -945,7 +947,7 @@ function AjustesView() {
                 </PrimaryBtn>
               </div>
               {[
-                { name:"Turno Mañana",   start:"08:30", end:"18:00", break:45 },
+                { name:"Turno Mañana",   start:"08:00", end:"17:30", break:60 },
                 { name:"Turno Tarde",    start:"14:00", end:"22:00", break:45 },
                 { name:"Turno Noche",    start:"22:00", end:"06:00", break:30 },
               ].map(({ name, start, end, break: b }) => (
@@ -1105,7 +1107,7 @@ export default function AdminDashboard() {
                  style={{ background:G.btn }}>AD</div>
             <div className="overflow-hidden">
               <p className="text-white text-xs font-medium truncate">Administrador</p>
-              <p className="text-white/30 text-[10px] truncate">admin@gotecnologia.cl</p>
+              <p className="text-white/30 text-[10px] truncate">admin@goalliance.cl</p>
             </div>
           </div>
         </div>
