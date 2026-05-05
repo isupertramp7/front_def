@@ -874,7 +874,7 @@ function ReportesView() {
 // ─── Ajustes View ─────────────────────────────────────────────────────────────
 
 function AjustesView() {
-  type SettingsTab = "empresa" | "turnos" | "seguridad" | "integraciones";
+  type SettingsTab = "empresa" | "turnos" | "integraciones";
   const [tab, setTab] = useState<SettingsTab>("empresa");
   const [saved, setSaved] = useState(false);
 
@@ -889,7 +889,6 @@ function AjustesView() {
   const TABS: { id: SettingsTab; label: string }[] = [
     { id:"empresa",       label:"Empresa"       },
     { id:"turnos",        label:"Turnos"        },
-    { id:"seguridad",     label:"Seguridad"     },
     { id:"integraciones", label:"Integraciones" },
   ];
 
@@ -970,41 +969,6 @@ function AjustesView() {
                   </div>
                 </div>
               ))}
-            </div>
-          )}
-
-          {tab === "seguridad" && (
-            <div className="flex flex-col gap-5 max-w-md">
-              <p className="text-sm font-semibold text-gray-900">Parámetros de seguridad</p>
-              {[
-                { label:"Radio de geofence por defecto (metros)", value:"500" },
-                { label:"Timeout de sesión (minutos)",            value:"480" },
-                { label:"TTL token WebAuthn step-up (segundos)",  value:"300" },
-              ].map(({ label, value }) => (
-                <div key={label} className="flex flex-col gap-1.5">
-                  <label className="text-[10px] font-semibold text-gray-400 uppercase tracking-wider">{label}</label>
-                  <input type="number" defaultValue={value} className={inputCls}/>
-                </div>
-              ))}
-              {[
-                { label:"Biometría WebAuthn obligatoria al marcar", default:true  },
-                { label:"Foto selfie obligatoria al marcar",        default:true  },
-                { label:"Validación geofence server-side",          default:true  },
-                { label:"Alertas por atraso >30 min",               default:false },
-              ].map(({ label, default: def }) => {
-                const [on, setOn] = useState(def);
-                return (
-                  <div key={label} className="flex items-center justify-between py-2"
-                       style={{ borderTop:"1px solid #f1f5f9" }}>
-                    <span className="text-sm text-gray-600">{label}</span>
-                    <button onClick={()=>setOn(v=>!v)}
-                      className="relative w-10 h-5 rounded-full transition-all"
-                      style={{ background:on?G.btn:"#e2e8f0" }}>
-                      <span className={`absolute top-0.5 w-4 h-4 bg-white rounded-full shadow transition-all ${on?"left-5":"left-0.5"}`}/>
-                    </button>
-                  </div>
-                );
-              })}
             </div>
           )}
 

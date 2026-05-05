@@ -46,8 +46,8 @@ export default function MobileAuth() {
 
   return (
     <div
-      className="min-h-screen flex flex-col items-center justify-center px-5 relative overflow-hidden"
-      style={{ background: "#050E1D", fontFamily: "Poppins, sans-serif" }}
+      className="flex flex-col items-center justify-center px-5 relative overflow-hidden"
+      style={{ background: "#050E1D", fontFamily: "Poppins, sans-serif", height: "100dvh" }}
     >
       {/* Dot grid */}
       <div className="absolute inset-0 pointer-events-none" style={{
@@ -79,7 +79,7 @@ export default function MobileAuth() {
       <img
         src="/logo.png"
         alt="GO Tecnología"
-        className="h-11 w-auto object-contain brightness-0 invert mb-7 relative z-10"
+        className="h-9 w-auto object-contain brightness-0 invert mb-5 relative z-10"
       />
 
       {/* Glass card */}
@@ -268,7 +268,7 @@ export default function MobileAuth() {
         </form>
       </div>
 
-      <p className="mt-7 text-white/20 text-xs font-light relative z-10">
+      <p className="mt-5 text-white/20 text-xs font-light relative z-10">
         © 2026 GO Tecnología · v1.0.0
       </p>
     </div>
