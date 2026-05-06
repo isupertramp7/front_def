@@ -19,6 +19,7 @@ interface AttRecord {
   entrada: string | null; salidaColacion: string | null;
   entradaColacion: string | null; salida: string | null;
   horasTrabajadas: string | null; minutosAtraso: number; status: AttStatus;
+  photoUrl: string | null;
 }
 
 interface Employee {
@@ -34,13 +35,13 @@ interface Site {
 }
 
 const ATT_DATA: AttRecord[] = [
-  { id:"1", name:"Ivan Alejandro Rojas",  rut:"12.345.678-9",  site:"GO",                 date:"29-04-2026", entrada:"08:11", salidaColacion:"13:11", entradaColacion:"14:11", salida:"17:35", horasTrabajadas:"08:44", minutosAtraso:11, status:"late" },
-  { id:"2", name:"Isabel Rojas Eneros",   rut:"10.234.567-K",  site:"Kaufmann Pajaritos", date:"29-04-2026", entrada:"08:00", salidaColacion:"12:45", entradaColacion:"13:45", salida:"18:00", horasTrabajadas:"09:15", minutosAtraso:0,  status:"overtime" },
-  { id:"3", name:"Cristian Teran",        rut:"15.678.901-2",  site:"GO",                 date:"29-04-2026", entrada:null,    salidaColacion:null,    entradaColacion:null,    salida:null,    horasTrabajadas:null,    minutosAtraso:0,  status:"absent" },
-  { id:"4", name:"Marcelo Matamala",      rut:"13.456.789-3",  site:"Soprole Vitacura",   date:"29-04-2026", entrada:"08:00", salidaColacion:"13:00", entradaColacion:"14:00", salida:"17:25", horasTrabajadas:"08:35", minutosAtraso:0,  status:"on_time" },
-  { id:"5", name:"Nicolas Sepulveda",     rut:"11.223.344-5",  site:"GO",                 date:"29-04-2026", entrada:"08:45", salidaColacion:"13:30", entradaColacion:"14:30", salida:"17:40", horasTrabajadas:"08:10", minutosAtraso:45, status:"late" },
-  { id:"6", name:"Pablo Sepulveda",       rut:"17.890.123-6",  site:"Kaufmann Pajaritos", date:"29-04-2026", entrada:"08:02", salidaColacion:"13:00", entradaColacion:"14:00", salida:"17:32", horasTrabajadas:"08:45", minutosAtraso:2,  status:"on_time" },
-  { id:"7", name:"Fernanda Teran",        rut:"14.567.890-7",  site:"Sura",               date:"29-04-2026", entrada:"07:58", salidaColacion:"12:58", entradaColacion:"13:58", salida:"19:00", horasTrabajadas:"10:17", minutosAtraso:0,  status:"overtime" },
+  { id:"1", name:"Ivan Alejandro Rojas",  rut:"12.345.678-9",  site:"GO",                 date:"29-04-2026", entrada:"08:11", salidaColacion:"13:11", entradaColacion:"14:11", salida:"17:35", horasTrabajadas:"08:44", minutosAtraso:11, status:"late",     photoUrl:null },
+  { id:"2", name:"Isabel Rojas Eneros",   rut:"10.234.567-K",  site:"Kaufmann Pajaritos", date:"29-04-2026", entrada:"08:00", salidaColacion:"12:45", entradaColacion:"13:45", salida:"18:00", horasTrabajadas:"09:15", minutosAtraso:0,  status:"overtime", photoUrl:null },
+  { id:"3", name:"Cristian Teran",        rut:"15.678.901-2",  site:"GO",                 date:"29-04-2026", entrada:null,    salidaColacion:null,    entradaColacion:null,    salida:null,    horasTrabajadas:null,    minutosAtraso:0,  status:"absent",   photoUrl:null },
+  { id:"4", name:"Marcelo Matamala",      rut:"13.456.789-3",  site:"Soprole Vitacura",   date:"29-04-2026", entrada:"08:00", salidaColacion:"13:00", entradaColacion:"14:00", salida:"17:25", horasTrabajadas:"08:35", minutosAtraso:0,  status:"on_time",  photoUrl:null },
+  { id:"5", name:"Nicolas Sepulveda",     rut:"11.223.344-5",  site:"GO",                 date:"29-04-2026", entrada:"08:45", salidaColacion:"13:30", entradaColacion:"14:30", salida:"17:40", horasTrabajadas:"08:10", minutosAtraso:45, status:"late",     photoUrl:null },
+  { id:"6", name:"Pablo Sepulveda",       rut:"17.890.123-6",  site:"Kaufmann Pajaritos", date:"29-04-2026", entrada:"08:02", salidaColacion:"13:00", entradaColacion:"14:00", salida:"17:32", horasTrabajadas:"08:45", minutosAtraso:2,  status:"on_time",  photoUrl:null },
+  { id:"7", name:"Fernanda Teran",        rut:"14.567.890-7",  site:"Sura",               date:"29-04-2026", entrada:"07:58", salidaColacion:"12:58", entradaColacion:"13:58", salida:"19:00", horasTrabajadas:"10:17", minutosAtraso:0,  status:"overtime", photoUrl:null },
 ];
 
 const EMP_DATA: Employee[] = [
@@ -301,13 +302,16 @@ function DashboardView() {
 
 // ─── Asistencia View ──────────────────────────────────────────────────────────
 
+type AuditCard = { url: string; name: string; time: string; x: number; y: number };
+
 function AsistenciaView() {
-  const [search,   setSearch]   = useState("");
-  const [site,     setSite]     = useState("Todos");
-  const [status,   setStatus]   = useState("all");
-  const [dateFrom, setDateFrom] = useState("2026-04-01");
-  const [dateTo,   setDateTo]   = useState("2026-04-30");
-  const [page,     setPage]     = useState(1);
+  const [search,     setSearch]     = useState("");
+  const [site,       setSite]       = useState("Todos");
+  const [status,     setStatus]     = useState("all");
+  const [dateFrom,   setDateFrom]   = useState("2026-04-01");
+  const [dateTo,     setDateTo]     = useState("2026-04-30");
+  const [page,       setPage]       = useState(1);
+  const [auditCard,  setAuditCard]  = useState<AuditCard | null>(null);
   const PAGE = 10;
 
   const filtered = useMemo(() => ATT_DATA.filter((r) => {
@@ -390,14 +394,14 @@ function AsistenciaView() {
           <table className="w-full text-sm">
             <thead>
               <tr style={{ background:"linear-gradient(to right, #f8fafc, #eff6ff)" }}>
-                {["Empleado","RUT","Sitio","Fecha","Entrada","Sal. Col.","Ent. Col.","Salida","H. Trab.","Atraso","Estado"].map((h) => (
+                {["Empleado","RUT","Sitio","Fecha","Entrada","Sal. Col.","Ent. Col.","Salida","H. Trab.","Atraso","Estado","Verificación"].map((h) => (
                   <th key={h} className="text-left px-4 py-3.5 text-[10px] font-semibold uppercase tracking-wider whitespace-nowrap text-gray-400">{h}</th>
                 ))}
               </tr>
             </thead>
             <tbody className="divide-y divide-gray-50">
               {paginated.length === 0 ? (
-                <tr><td colSpan={11} className="px-4 py-12 text-center text-gray-400 text-sm">Sin resultados</td></tr>
+                <tr><td colSpan={12} className="px-4 py-12 text-center text-gray-400 text-sm">Sin resultados</td></tr>
               ) : paginated.map((r) => {
                 const s = ATT_STATUS_META[r.status];
                 return (
@@ -419,6 +423,26 @@ function AsistenciaView() {
                         <span className="w-1.5 h-1.5 rounded-full flex-shrink-0" style={{ background:s.dot }}/>{s.label}
                       </span>
                     </td>
+                    <td className="px-4 py-3.5 whitespace-nowrap">
+                      {r.photoUrl ? (
+                        <img
+                          src={r.photoUrl}
+                          alt={r.name}
+                          className="w-10 h-10 rounded-full object-cover ring-2 ring-white shadow-md cursor-pointer transition-transform hover:scale-110 grayscale"
+                          onMouseEnter={(e) => {
+                            const rect = (e.currentTarget as HTMLElement).getBoundingClientRect();
+                            setAuditCard({ url: r.photoUrl!, name: r.name, time: r.entrada ?? "", x: rect.right + 12, y: rect.top });
+                          }}
+                          onMouseLeave={() => setAuditCard(null)}
+                        />
+                      ) : (
+                        <div className="w-10 h-10 rounded-full bg-gray-100 flex items-center justify-center">
+                          <svg className="w-5 h-5 text-gray-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"/>
+                          </svg>
+                        </div>
+                      )}
+                    </td>
                   </tr>
                 );
               })}
@@ -436,6 +460,52 @@ function AsistenciaView() {
           </div>
         </div>
       </Card>
+
+      {/* Audit hover-card glassmorphism */}
+      {auditCard && (
+        <div
+          className="fixed z-50 pointer-events-none"
+          style={{ left: auditCard.x, top: Math.min(auditCard.y - 80, window.innerHeight - 320) }}
+        >
+          <div style={{
+            background: "rgba(7,15,30,0.55)",
+            backdropFilter: "blur(24px)",
+            WebkitBackdropFilter: "blur(24px)",
+            border: "1px solid rgba(255,255,255,0.18)",
+            borderRadius: "20px",
+            boxShadow: "0 12px 48px rgba(7,15,30,0.45), inset 0 1px 0 rgba(255,255,255,0.12)",
+            padding: "14px",
+            width: "212px",
+          }}>
+            <img
+              src={auditCard.url}
+              alt="Verificación"
+              style={{ width:"184px", height:"184px", borderRadius:"12px", objectFit:"cover", display:"block", filter:"grayscale(1)" }}
+            />
+            <div style={{ marginTop:"10px" }}>
+              <p style={{ color:"#fff", fontSize:"12px", fontWeight:600, margin:0, lineHeight:1.3 }}>
+                {auditCard.name.split(" ").slice(0,2).join(" ")}
+              </p>
+              <div style={{ display:"flex", alignItems:"center", gap:"6px", marginTop:"4px" }}>
+                <span style={{
+                  background:"rgba(16,185,129,0.2)",
+                  border:"1px solid rgba(16,185,129,0.4)",
+                  color:"#34d399",
+                  fontSize:"10px",
+                  fontWeight:600,
+                  padding:"2px 8px",
+                  borderRadius:"999px",
+                }}>Selfie marcación</span>
+                {auditCard.time && (
+                  <span style={{ color:"rgba(255,255,255,0.45)", fontSize:"10px", fontFamily:"monospace" }}>
+                    {auditCard.time}
+                  </span>
+                )}
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
