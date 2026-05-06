@@ -512,28 +512,196 @@ function AsistenciaView() {
 
 // ─── Empleados View ───────────────────────────────────────────────────────────
 
+type EmpSubView = "list" | "form";
+
+interface EmpForm {
+  name: string; rut: string; email: string;
+  site: string; role: string; status: EmpStatus;
+}
+
+const EMPTY_FORM: EmpForm = { name:"", rut:"", email:"", site:"GO", role:"Empleado", status:"activo" };
+
 function EmpleadosView() {
-  const [search,    setSearch]    = useState("");
-  const [siteF,     setSiteF]     = useState("Todos");
-  const [statusF,   setStatusF]   = useState("all");
-  const [showModal, setShowModal] = useState(false);
+  const [subView,    setSubView]    = useState<EmpSubView>("list");
+  const [employees,  setEmployees]  = useState<Employee[]>(EMP_DATA);
+  const [editing,    setEditing]    = useState<Employee | null>(null);
+  const [form,       setForm]       = useState<EmpForm>(EMPTY_FORM);
+  const [search,     setSearch]     = useState("");
+  const [siteF,      setSiteF]      = useState("Todos");
+  const [statusF,    setStatusF]    = useState("all");
+  const [delConfirm, setDelConfirm] = useState<string | null>(null);
 
-  const filtered = useMemo(() => EMP_DATA.filter((e) => {
-    const ms   = e.name.toLowerCase().includes(search.toLowerCase()) || e.rut.includes(search);
+  const filtered = useMemo(() => employees.filter((e) => {
+    const ms    = e.name.toLowerCase().includes(search.toLowerCase()) || e.rut.includes(search);
     const mSite = siteF   === "Todos" || e.site === siteF;
-    const mSt  = statusF === "all"   || e.status === statusF;
+    const mSt   = statusF === "all"   || e.status === statusF;
     return ms && mSite && mSt;
-  }), [search, siteF, statusF]);
+  }), [employees, search, siteF, statusF]);
 
-  const inputCls = "border border-gray-200 rounded-xl px-3 py-2 text-sm bg-gray-50 text-gray-700 focus:outline-none w-full";
+  const openCreate = () => {
+    setEditing(null);
+    setForm(EMPTY_FORM);
+    setSubView("form");
+  };
 
+  const openEdit = (emp: Employee) => {
+    setEditing(emp);
+    setForm({ name:emp.name, rut:emp.rut, email:emp.email, site:emp.site, role:emp.role, status:emp.status });
+    setSubView("form");
+  };
+
+  const saveForm = () => {
+    if (editing) {
+      setEmployees(prev => prev.map(e => e.id === editing.id ? { ...e, ...form } : e));
+    } else {
+      setEmployees(prev => [...prev, {
+        id: String(Date.now()), ...form,
+        lastLogin:"Nunca", hasDevice:false,
+      }]);
+    }
+    setSubView("list");
+  };
+
+  const toggleStatus = (id: string) =>
+    setEmployees(prev => prev.map(e => e.id === id ? { ...e, status: e.status === "activo" ? "inactivo" : "activo" } : e));
+
+  const deleteEmp = (id: string) => {
+    setEmployees(prev => prev.filter(e => e.id !== id));
+    setDelConfirm(null);
+  };
+
+  const inputCls = "border border-gray-200 rounded-xl px-3 py-2 text-sm bg-gray-50 text-gray-700 focus:outline-none focus:border-blue-400 transition-colors w-full";
+
+  // ── Form sub-view ──────────────────────────────────────────────────────────
+  if (subView === "form") {
+    const isNew = !editing;
+    return (
+      <div className="p-6 flex flex-col gap-5">
+        {/* Breadcrumb */}
+        <div className="flex items-center gap-2">
+          <button onClick={()=>setSubView("list")}
+            className="flex items-center gap-1.5 text-sm font-medium transition-colors"
+            style={{ color:"#2989d8" }}>
+            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7"/>
+            </svg>
+            Empleados
+          </button>
+          <span className="text-gray-300">/</span>
+          <span className="text-sm font-semibold text-gray-700">
+            {isNew ? "Nuevo empleado" : `Editar · ${editing!.name.split(" ").slice(0,2).join(" ")}`}
+          </span>
+        </div>
+
+        <div className="grid grid-cols-3 gap-5">
+          {/* Form card */}
+          <Card className="col-span-2 p-6 flex flex-col gap-5">
+            <p className="text-sm font-semibold text-gray-900">Datos personales</p>
+
+            <div className="grid grid-cols-2 gap-4">
+              <div className="flex flex-col gap-1.5">
+                <label className="text-[10px] font-semibold text-gray-400 uppercase tracking-wider">Nombre completo</label>
+                <input type="text" placeholder="Cristian Florez Revilla" value={form.name}
+                  onChange={e=>setForm(f=>({...f,name:e.target.value}))} className={inputCls}/>
+              </div>
+              <div className="flex flex-col gap-1.5">
+                <label className="text-[10px] font-semibold text-gray-400 uppercase tracking-wider">RUT</label>
+                <input type="text" placeholder="12.345.678-9" value={form.rut}
+                  onChange={e=>setForm(f=>({...f,rut:e.target.value}))} className={inputCls}/>
+              </div>
+              <div className="col-span-2 flex flex-col gap-1.5">
+                <label className="text-[10px] font-semibold text-gray-400 uppercase tracking-wider">Correo electrónico</label>
+                <input type="email" placeholder="c.florez@goalliance.cl" value={form.email}
+                  onChange={e=>setForm(f=>({...f,email:e.target.value}))} className={inputCls}/>
+              </div>
+            </div>
+
+            <div className="pt-1" style={{ borderTop:"1px solid #f1f5f9" }}>
+              <p className="text-sm font-semibold text-gray-900 mb-4">Asignación</p>
+              <div className="grid grid-cols-3 gap-4">
+                <div className="flex flex-col gap-1.5">
+                  <label className="text-[10px] font-semibold text-gray-400 uppercase tracking-wider">Sitio</label>
+                  <select value={form.site} onChange={e=>setForm(f=>({...f,site:e.target.value}))} className={inputCls}>
+                    {SITES.filter(s=>s!=="Todos").map(s=><option key={s}>{s}</option>)}
+                  </select>
+                </div>
+                <div className="flex flex-col gap-1.5">
+                  <label className="text-[10px] font-semibold text-gray-400 uppercase tracking-wider">Rol</label>
+                  <select value={form.role} onChange={e=>setForm(f=>({...f,role:e.target.value}))} className={inputCls}>
+                    {["Empleado","Supervisor","Administrador"].map(r=><option key={r}>{r}</option>)}
+                  </select>
+                </div>
+                <div className="flex flex-col gap-1.5">
+                  <label className="text-[10px] font-semibold text-gray-400 uppercase tracking-wider">Estado</label>
+                  <select value={form.status} onChange={e=>setForm(f=>({...f,status:e.target.value as EmpStatus}))} className={inputCls}>
+                    <option value="activo">Activo</option>
+                    <option value="inactivo">Inactivo</option>
+                  </select>
+                </div>
+              </div>
+            </div>
+
+            {/* Actions */}
+            <div className="flex items-center gap-3 pt-2" style={{ borderTop:"1px solid #f1f5f9" }}>
+              <PrimaryBtn onClick={saveForm}>
+                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7"/>
+                </svg>
+                {isNew ? "Crear empleado" : "Guardar cambios"}
+              </PrimaryBtn>
+              <button onClick={()=>setSubView("list")}
+                className="px-4 py-2 rounded-xl text-sm font-medium border border-gray-200 text-gray-500 hover:bg-gray-50 transition-colors">
+                Cancelar
+              </button>
+            </div>
+          </Card>
+
+          {/* Info lateral */}
+          <div className="flex flex-col gap-4">
+            {!isNew && (
+              <Card className="p-5 flex flex-col gap-3">
+                <p className="text-xs font-semibold text-gray-500 uppercase tracking-wider">Información</p>
+                <div className="flex flex-col gap-2 text-xs">
+                  <div className="flex justify-between">
+                    <span className="text-gray-400">Último acceso</span>
+                    <span className="font-medium text-gray-700">{editing!.lastLogin}</span>
+                  </div>
+                  <div className="flex justify-between">
+                    <span className="text-gray-400">Passkey</span>
+                    <span className={editing!.hasDevice ? "text-emerald-600 font-medium" : "text-gray-300"}>
+                      {editing!.hasDevice ? "Registrada" : "Sin passkey"}
+                    </span>
+                  </div>
+                </div>
+              </Card>
+            )}
+            <Card className="p-5 flex flex-col gap-3">
+              <p className="text-xs font-semibold text-gray-500 uppercase tracking-wider">Roles disponibles</p>
+              {[
+                { r:"Empleado",      desc:"Acceso solo a marcaje móvil" },
+                { r:"Supervisor",    desc:"Ve asistencia de su sitio"    },
+                { r:"Administrador", desc:"Acceso completo al panel"     },
+              ].map(({r,desc})=>(
+                <div key={r} className="flex flex-col gap-0.5">
+                  <span className="text-xs font-semibold text-gray-700">{r}</span>
+                  <span className="text-[10px] text-gray-400">{desc}</span>
+                </div>
+              ))}
+            </Card>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  // ── List sub-view ──────────────────────────────────────────────────────────
   return (
     <div className="p-6 flex flex-col gap-5">
       <SectionHeader
         title="Empleados"
-        sub={`${EMP_DATA.filter(e=>e.status==="activo").length} activos · ${EMP_DATA.filter(e=>e.status==="inactivo").length} inactivos`}
+        sub={`${employees.filter(e=>e.status==="activo").length} activos · ${employees.filter(e=>e.status==="inactivo").length} inactivos`}
         action={
-          <PrimaryBtn onClick={()=>setShowModal(true)}>
+          <PrimaryBtn onClick={openCreate}>
             <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4"/></svg>
             Nuevo empleado
           </PrimaryBtn>
@@ -575,7 +743,9 @@ function EmpleadosView() {
               </tr>
             </thead>
             <tbody className="divide-y divide-gray-50">
-              {filtered.map((emp) => (
+              {filtered.length === 0 ? (
+                <tr><td colSpan={8} className="px-4 py-12 text-center text-gray-400 text-sm">Sin resultados</td></tr>
+              ) : filtered.map((emp) => (
                 <tr key={emp.id} className="hover:bg-blue-50/20 transition-colors">
                   <td className="px-4 py-3.5">
                     <div className="flex items-center gap-2.5">
@@ -607,13 +777,28 @@ function EmpleadosView() {
                   </td>
                   <td className="px-4 py-3.5 whitespace-nowrap">
                     <div className="flex items-center gap-2">
-                      <button className="text-xs font-medium transition-colors" style={{ color:"#2989d8" }}
+                      <button onClick={()=>openEdit(emp)}
+                        className="text-xs font-medium transition-colors" style={{ color:"#2989d8" }}
                         onMouseEnter={(e)=>((e.target as HTMLElement).style.color="#1e5799")}
                         onMouseLeave={(e)=>((e.target as HTMLElement).style.color="#2989d8")}>Editar</button>
                       <span className="text-gray-200">·</span>
-                      <button className="text-xs font-medium text-gray-400 hover:text-red-500 transition-colors">
+                      <button onClick={()=>toggleStatus(emp.id)}
+                        className="text-xs font-medium text-gray-400 hover:text-amber-500 transition-colors">
                         {emp.status==="activo" ? "Desactivar" : "Activar"}
                       </button>
+                      <span className="text-gray-200">·</span>
+                      {delConfirm === emp.id ? (
+                        <span className="flex items-center gap-1">
+                          <button onClick={()=>deleteEmp(emp.id)}
+                            className="text-xs font-semibold text-red-500 hover:text-red-700 transition-colors">Confirmar</button>
+                          <span className="text-gray-200">·</span>
+                          <button onClick={()=>setDelConfirm(null)}
+                            className="text-xs text-gray-400 hover:text-gray-600 transition-colors">No</button>
+                        </span>
+                      ) : (
+                        <button onClick={()=>setDelConfirm(emp.id)}
+                          className="text-xs font-medium text-gray-400 hover:text-red-500 transition-colors">Eliminar</button>
+                      )}
                     </div>
                   </td>
                 </tr>
@@ -625,58 +810,6 @@ function EmpleadosView() {
           <p className="text-xs text-gray-400">{filtered.length} empleado{filtered.length!==1?"s":""}</p>
         </div>
       </Card>
-
-      {/* Modal nuevo empleado */}
-      {showModal && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 backdrop-blur-sm">
-          <div className="bg-white rounded-2xl shadow-2xl w-full max-w-md p-6"
-               style={{ border:"1px solid #E4EDF6" }}>
-            <div className="flex items-center justify-between mb-5">
-              <h3 className="text-base font-semibold text-gray-900">Nuevo empleado</h3>
-              <button onClick={()=>setShowModal(false)} className="text-gray-400 hover:text-gray-600">
-                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M6 18L18 6M6 6l12 12"/></svg>
-              </button>
-            </div>
-            <div className="flex flex-col gap-4">
-              {[
-                { label:"Nombre completo", placeholder:"Cristian Florez Revilla", type:"text" },
-                { label:"RUT",             placeholder:"12.345.678-9",            type:"text" },
-                { label:"Correo",          placeholder:"c.florez@empresa.cl",     type:"email" },
-              ].map(({ label, placeholder, type }) => (
-                <div key={label} className="flex flex-col gap-1">
-                  <label className="text-[10px] font-semibold text-gray-400 uppercase tracking-wider">{label}</label>
-                  <input type={type} placeholder={placeholder}
-                    className="border border-gray-200 rounded-xl px-3 py-2.5 text-sm bg-gray-50 text-gray-700 focus:outline-none focus:border-blue-400 transition-colors"/>
-                </div>
-              ))}
-              <div className="grid grid-cols-2 gap-3">
-                <div className="flex flex-col gap-1">
-                  <label className="text-[10px] font-semibold text-gray-400 uppercase tracking-wider">Sitio</label>
-                  <select className="border border-gray-200 rounded-xl px-3 py-2.5 text-sm bg-gray-50 text-gray-700 focus:outline-none">
-                    {SITES.filter(s=>s!=="Todos").map(s=><option key={s}>{s}</option>)}
-                  </select>
-                </div>
-                <div className="flex flex-col gap-1">
-                  <label className="text-[10px] font-semibold text-gray-400 uppercase tracking-wider">Rol</label>
-                  <select className="border border-gray-200 rounded-xl px-3 py-2.5 text-sm bg-gray-50 text-gray-700 focus:outline-none">
-                    {["Empleado","Supervisor","Administrador"].map(r=><option key={r}>{r}</option>)}
-                  </select>
-                </div>
-              </div>
-              <div className="flex gap-3 mt-1">
-                <button onClick={()=>setShowModal(false)}
-                  className="flex-1 py-2.5 rounded-xl text-sm font-medium border border-gray-200 text-gray-500 hover:bg-gray-50 transition-colors">
-                  Cancelar
-                </button>
-                <button className="flex-1 py-2.5 rounded-xl text-sm font-semibold text-white transition-all active:scale-98"
-                  style={{ background:G.btn, boxShadow:"0 4px 14px rgba(41,137,216,0.3)" }}>
-                  Crear empleado
-                </button>
-              </div>
-            </div>
-          </div>
-        </div>
-      )}
     </div>
   );
 }

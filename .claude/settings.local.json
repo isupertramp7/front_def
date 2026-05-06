@@ -33,7 +33,10 @@
       "PowerShell(ls \"C:\\\\Users\\\\Ivan Gonzalez\\\\Desktop\\\\GOTEST\\\\mockups\" | ForEach-Object { $_.Name })",
       "PowerShell(ls \"C:\\\\Users\\\\Ivan Gonzalez\\\\Desktop\\\\GOTEST\\\\pwa-config\" | ForEach-Object { $_.Name })",
       "PowerShell(netstat *)",
-      "PowerShell(Stop-Process *)"
+      "PowerShell(Stop-Process *)",
+      "Bash(timeout 5)",
+      "Bash(Start-Sleep -Seconds 4)",
+      "Bash(Get-Content \"C:\\\\Users\\\\IVANGO~1\\\\AppData\\\\Local\\\\Temp\\\\claude\\\\C--Users-Ivan-Gonzalez-Desktop-GOTEST\\\\d2f2ca92-1d10-49a1-a9eb-3899b905d92e\\\\tasks\\\\bai37jo82.output\")"
     ]
   }
 }
