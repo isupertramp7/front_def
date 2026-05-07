@@ -382,6 +382,107 @@ Historial de marcaciones del usuario autenticado.
 
 ---
 
+## Employees (Admin)
+
+### GET /employees
+Lista empleados con filtros.  
+**Requiere:** `role: admin`
+
+**Query params:** `?siteId=site_01&status=activo&search=ivan&limit=50&cursor=<base64>`
+
+**Response 200**
+```json
+{
+  "employees": [
+    {
+      "id": "usr_01HX",
+      "rut": "12.345.678-9",
+      "name": "Ivan Alejandro Rojas",
+      "email": "i.rojas@goalliance.cl",
+      "role": "employee",
+      "siteId": "site_01",
+      "siteName": "GO",
+      "status": "activo",
+      "passkey": true,
+      "createdAt": "2026-01-15T00:00:00Z"
+    }
+  ],
+  "nextCursor": null,
+  "total": 9
+}
+```
+
+---
+
+### POST /employees
+Crea un nuevo empleado.  
+**Requiere:** `role: admin`
+
+**Request**
+```json
+{
+  "rut": "19.876.543-2",
+  "name": "Nombre Apellido",
+  "email": "n.apellido@goalliance.cl",
+  "siteId": "site_01",
+  "role": "employee",
+  "password": "temporal123"
+}
+```
+
+**Response 201**
+```json
+{
+  "id": "usr_02HX",
+  "rut": "19.876.543-2",
+  "name": "Nombre Apellido",
+  "email": "n.apellido@goalliance.cl",
+  "siteId": "site_01",
+  "role": "employee",
+  "status": "activo",
+  "passkey": false
+}
+```
+
+**Response 409**
+```json
+{ "error": "RUT_ALREADY_EXISTS" }
+```
+
+---
+
+### PUT /employees/{employeeId}
+Actualiza datos de un empleado.  
+**Requiere:** `role: admin`
+
+**Request** (todos los campos opcionales)
+```json
+{
+  "name": "Nombre Nuevo",
+  "email": "nuevo@goalliance.cl",
+  "siteId": "site_02",
+  "status": "inactivo"
+}
+```
+
+**Response 200**
+```json
+{ "id": "usr_01HX", "updated": true }
+```
+
+---
+
+### DELETE /employees/{employeeId}
+Desactiva un empleado (soft delete — no elimina registros de asistencia).  
+**Requiere:** `role: admin`
+
+**Response 200**
+```json
+{ "id": "usr_01HX", "status": "inactivo" }
+```
+
+---
+
 ## Reports (Admin)
 
 ### GET /reports
@@ -421,6 +522,7 @@ Datos de asistencia con cálculo de HT, atrasos, HE.
         "entradaColacion": "15:13",
         "salida": "18:05"
       },
+      "photoUrl": "https://gotest-punches.s3.amazonaws.com/photos/usr_01HX/2026-04-29T08:41:00Z.jpg",
       "horasTrabajadas": "08:45",
       "minutosAtraso": 11,
       "horasExtra": 5,
@@ -454,6 +556,112 @@ Genera reporte .xlsx y retorna URL prefirmada de S3.
   "expiresAt": "2026-04-29T21:49:00Z",
   "filename": "reporte_casa_matriz_2026-04.xlsx"
 }
+```
+
+---
+
+## Calendar Exceptions (Admin)
+
+> Gestión de feriados nacionales y períodos de vacaciones por colaborador. Las excepciones son tenidas en cuenta por el backend para calcular atrasos y ausencias correctamente.
+
+### GET /exceptions
+Lista excepciones con filtros opcionales.  
+**Requiere:** `role: admin`
+
+**Query params:** `?year=2026&month=5&type=feriado&employeeId=usr_01HX`
+
+**Response 200**
+```json
+{
+  "exceptions": [
+    {
+      "id": "exc_01",
+      "type": "feriado",
+      "title": "Día del Trabajador",
+      "dateFrom": "2026-05-01",
+      "dateTo": "2026-05-01",
+      "description": "Feriado nacional obligatorio irrenunciable",
+      "employeeId": null,
+      "employeeName": null
+    },
+    {
+      "id": "exc_02",
+      "type": "vacaciones",
+      "title": "Vacaciones anuales",
+      "dateFrom": "2026-05-12",
+      "dateTo": "2026-05-16",
+      "description": "Vacaciones anuales aprobadas por RRHH",
+      "employeeId": "usr_02HX",
+      "employeeName": "Isabel Rojas Eneros"
+    }
+  ]
+}
+```
+
+---
+
+### POST /exceptions
+Crea una excepción (feriado o vacaciones).  
+**Requiere:** `role: admin`
+
+**Request**
+```json
+{
+  "type": "vacaciones",
+  "title": "Vacaciones anuales",
+  "dateFrom": "2026-06-02",
+  "dateTo": "2026-06-06",
+  "employeeId": "usr_01HX",
+  "description": "Aprobado por RRHH"
+}
+```
+> `type`: `"feriado"` | `"vacaciones"`  
+> `employeeId`: requerido solo si `type === "vacaciones"`; `null` para feriados (aplica a todos)
+
+**Response 201**
+```json
+{
+  "id": "exc_03",
+  "type": "vacaciones",
+  "title": "Vacaciones anuales",
+  "dateFrom": "2026-06-02",
+  "dateTo": "2026-06-06",
+  "employeeId": "usr_01HX",
+  "employeeName": "Ivan Alejandro Rojas",
+  "description": "Aprobado por RRHH"
+}
+```
+
+---
+
+### PUT /exceptions/{exceptionId}
+Actualiza una excepción existente.  
+**Requiere:** `role: admin`
+
+**Request** (todos los campos opcionales)
+```json
+{
+  "title": "Título actualizado",
+  "dateFrom": "2026-06-03",
+  "dateTo": "2026-06-07",
+  "description": "Fechas corregidas"
+}
+```
+
+**Response 200**
+```json
+{ "id": "exc_03", "updated": true }
+```
+
+---
+
+### DELETE /exceptions/{exceptionId}
+Elimina una excepción.  
+**Requiere:** `role: admin`
+
+**Response 200**
+```json
+{ "id": "exc_03", "deleted": true }
 ```
 
 ---

@@ -1,6 +1,6 @@
 # GOTEST — Contexto del proyecto
 
-> Última actualización: 2026-05-01
+> Última actualización: 2026-05-06
 
 ---
 
@@ -68,8 +68,16 @@ Definido en `api_contract.md`. Base URL: `https://api.gotest.app/v1`
 | `POST /punches/presigned-url` | Genera URL S3 para subir selfie |
 | `POST /punches` | Registra marcación (valida geofence server-side) |
 | `GET /punches` | Historial del usuario autenticado |
-| `GET /reports` | Datos asistencia con HT/atrasos/HE (admin) |
+| `GET /reports` | Datos asistencia con HT/atrasos/HE + photoUrl (admin) |
 | `GET /reports/export` | Genera .xlsx → presigned URL S3 |
+| `GET /employees` | Lista empleados con filtros (admin) |
+| `POST /employees` | Crea empleado (admin) |
+| `PUT /employees/{id}` | Actualiza empleado (admin) |
+| `DELETE /employees/{id}` | Desactiva empleado — soft delete (admin) |
+| `GET /exceptions` | Lista feriados y vacaciones por período (admin) |
+| `POST /exceptions` | Crea excepción de calendario (admin) |
+| `PUT /exceptions/{id}` | Actualiza excepción (admin) |
+| `DELETE /exceptions/{id}` | Elimina excepción (admin) |
 
 Flujo marcación: `GET presigned-url` → `PUT blob S3` → `POST /punches + photoKey`  
 WebAuthn es step-up justo antes del punch (no es el login inicial).
@@ -80,7 +88,7 @@ WebAuthn es step-up justo antes del punch (no es el login inicial).
 
 ### Mockups / diseño de pantallas
 - [x] `LoginPage.tsx` — login desktop, dual panel (brand + form), detecta RUT vs email automáticamente
-- [x] `MobileAuth.tsx` — login móvil glassmorphism dark
+- [x] `MobileAuth.tsx` — login móvil glassmorphism dark; viewport corregido a `100dvh` (elimina scroll en mobile)
 - [x] `MobilePunch.tsx` — app marcación completa:
   - Flujo 4 pasos: entrada → salida colación → regreso colación → salida
   - Reloj en tiempo real
@@ -89,13 +97,14 @@ WebAuthn es step-up justo antes del punch (no es el login inicial).
   - Camera modal: preview con guía óvalo, captura, confirmar/repetir, upload spinner
   - Historial del día por turno
   - Bottom tab nav (Asistencia / Historial / Más)
-- [x] `AdminDashboard.tsx` — dashboard admin completo (6 vistas):
+- [x] `AdminDashboard.tsx` — dashboard admin completo (7 vistas):
   - **Dashboard**: KPIs (activos/presentes/ausentes/alertas), gráfico barras apiladas semanal, asistencia por sitio, actividad reciente, tabla resumen
-  - **Asistencia**: filtros (fecha, sitio, estado, búsqueda), tabla paginada, export CSV client-side
-  - **Empleados**: tabla con filtros, estado passkey por empleado, modal "Nuevo empleado"
+  - **Asistencia**: filtros (fecha, sitio, estado, búsqueda), tabla paginada, export CSV client-side; columna "Verificación" con foto selfie (hover card glassmorphism dark)
+  - **Empleados**: refactorizado de modal a sub-vista inline (`list` ↔ `form`), tabla con filtros, estado passkey por empleado
   - **Sitios**: cards con toggle activo/inactivo, barra asistencia, coords
   - **Reportes**: panel configuración (tipo/rango/sitio), preview tabla, botones CSV/Excel
-  - **Ajustes**: tabs empresa/turnos/seguridad/integraciones, toggles, API keys
+  - **Ajustes**: tabs empresa/turnos/integraciones (tab "Seguridad" eliminado), toggles, API keys
+  - **Calendario** *(nuevo)*: vista de calendario mensual navegable, gestión CRUD de excepciones (feriados nacionales y vacaciones por colaborador), panel lateral "próximas excepciones", modal crear/editar con tipo, rango de fechas y selector de empleado
 
 ### Lógica compartida
 - [x] `geofence.ts` — Haversine correcta, `checkGeofence()` retorna `{ isWithin, distanceMeters }`
@@ -157,3 +166,4 @@ WebAuthn es step-up justo antes del punch (no es el login inicial).
 - Sitios: GO, Kaufmann Pajaritos, Soprole Vitacura, Sura, Komatsu, Soprole renca (inactiva)
 - 9 empleados con datos realistas chilenos (RUT, correo @goalliance.cl)
 - Turno principal: lunes a viernes 08:00–17:30, 1 hora de colación
+- Excepciones mock en calendario: Día del Trabajador (01-05), Glorias Navales (21-05), vacaciones Isabel Rojas 12-16/05
