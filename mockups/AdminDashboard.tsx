@@ -10,8 +10,15 @@ const G = {
 
 // ─── Types & Mock Data ────────────────────────────────────────────────────────
 
-type ViewId = "dashboard" | "asistencia" | "empleados" | "sitios" | "reportes" | "ajustes";
+type ViewId = "dashboard" | "asistencia" | "empleados" | "sitios" | "reportes" | "ajustes" | "calendario";
 type AttStatus = "on_time" | "late" | "absent" | "overtime";
+type ExceptionType = "feriado" | "vacaciones";
+
+interface CalendarException {
+  id: string; type: ExceptionType; title: string;
+  dateFrom: string; dateTo: string;
+  employeeName?: string; employeeId?: string; description: string;
+}
 type EmpStatus = "activo" | "inactivo";
 
 interface AttRecord {
@@ -81,6 +88,12 @@ const RECENT_PUNCHES = [
   { name:"Nicolas Sepulveda", type:"salida", time:"17:40", site:"GO"                 },
 ];
 
+const EXCEPTION_DATA: CalendarException[] = [
+  { id:"e1", type:"feriado",    title:"Día del Trabajador",         dateFrom:"2026-05-01", dateTo:"2026-05-01", description:"Feriado nacional obligatorio irrenunciable" },
+  { id:"e2", type:"feriado",    title:"Glorias Navales",            dateFrom:"2026-05-21", dateTo:"2026-05-21", description:"Conmemora el Combate Naval de Iquique" },
+  { id:"e3", type:"vacaciones", title:"Vacaciones anuales",         dateFrom:"2026-05-12", dateTo:"2026-05-16", employeeName:"Isabel Rojas Eneros", employeeId:"2", description:"Vacaciones anuales aprobadas por RRHH" },
+];
+
 const SITES    = ["Todos", "GO", "Kaufmann Pajaritos", "Soprole Vitacura", "Sura", "Komatsu"];
 const ATT_STATUS_META = {
   on_time:  { label:"A tiempo",  bg:"#ecfdf5", color:"#065f46", dot:"#10b981" },
@@ -96,6 +109,7 @@ const NAV_ITEMS: { id: ViewId; label: string; icon: string }[] = [
   { id:"sitios",     label:"Sitios",     icon:"M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" },
   { id:"reportes",   label:"Reportes",   icon:"M9 17v-2m3 2v-4m3 4v-6m2 10H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" },
   { id:"ajustes",    label:"Ajustes",    icon:"M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z M15 12a3 3 0 11-6 0 3 3 0 016 0z" },
+  { id:"calendario", label:"Calendario", icon:"M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" },
 ];
 
 // ─── Shared Components ────────────────────────────────────────────────────────
@@ -1219,6 +1233,311 @@ function AjustesView() {
   );
 }
 
+// ─── Calendario View ──────────────────────────────────────────────────────────
+
+const EXC_META = {
+  feriado:    { label:"Feriado Nacional", bg:"#fff7ed", color:"#92400e", dot:"#f59e0b", chip:"rgba(245,158,11,0.12)" },
+  vacaciones: { label:"Vacaciones",       bg:"#ecfdf5", color:"#065f46", dot:"#10b981", chip:"rgba(16,185,129,0.12)" },
+};
+
+function CalendarioView() {
+  const [monthOffset,   setMonthOffset]   = useState(0);
+  const [exceptions,    setExceptions]    = useState<CalendarException[]>(EXCEPTION_DATA);
+  const [showModal,     setShowModal]     = useState(false);
+  const [editingId,     setEditingId]     = useState<string | null>(null);
+  const [form,          setForm]          = useState({ type:"feriado", title:"", dateFrom:"", dateTo:"", employeeId:"", description:"" });
+
+  const baseYear = 2026, baseMonth = 5;
+  let m = baseMonth + monthOffset, y = baseYear;
+  while (m > 12) { m -= 12; y++; } while (m < 1) { m += 12; y--; }
+
+  const daysInMonth = new Date(y, m, 0).getDate();
+  const firstDay    = (new Date(y, m - 1, 1).getDay() + 6) % 7;
+  const cells: (number | null)[] = [...Array(firstDay).fill(null), ...Array.from({ length: daysInMonth }, (_, i) => i + 1)];
+  while (cells.length % 7 !== 0) cells.push(null);
+
+  const DAYS   = ["Lun","Mar","Mié","Jue","Vie","Sáb","Dom"];
+  const MONTHS = ["Enero","Febrero","Marzo","Abril","Mayo","Junio","Julio","Agosto","Septiembre","Octubre","Noviembre","Diciembre"];
+
+  const ds = (day: number) => `${y}-${String(m).padStart(2,"0")}-${String(day).padStart(2,"0")}`;
+  const excsOn = (day: number) => { const d = ds(day); return exceptions.filter(e => e.dateFrom <= d && d <= e.dateTo); };
+  const today_ = new Date();
+  const isToday = (day: number) => day === today_.getDate() && m === today_.getMonth()+1 && y === today_.getFullYear();
+
+  const fmtDate = (s: string) => { const [fy,fm,fd] = s.split("-"); return `${fd}/${fm}/${fy}`; };
+  const inputCls = "border border-gray-200 rounded-xl px-3 py-2.5 text-sm bg-gray-50 text-gray-700 focus:outline-none focus:border-blue-400 transition-colors w-full";
+
+  const openCreate = () => {
+    setEditingId(null);
+    setForm({ type:"feriado", title:"", dateFrom:"", dateTo:"", employeeId:"", description:"" });
+    setShowModal(true);
+  };
+
+  const openEdit = (exc: CalendarException) => {
+    setEditingId(exc.id);
+    setForm({ type:exc.type, title:exc.title, dateFrom:exc.dateFrom, dateTo:exc.dateTo, employeeId:exc.employeeId ?? "", description:exc.description });
+    setShowModal(true);
+  };
+
+  const submit = () => {
+    if (!form.title || !form.dateFrom || !form.dateTo) return;
+    const emp = EMP_DATA.find(e => e.id === form.employeeId);
+    const built: CalendarException = {
+      id: editingId ?? `e${Date.now()}`,
+      type: form.type as ExceptionType, title: form.title,
+      dateFrom: form.dateFrom, dateTo: form.dateTo,
+      employeeName: form.type==="vacaciones" ? emp?.name : undefined,
+      employeeId:   form.type==="vacaciones" ? form.employeeId : undefined,
+      description:  form.description,
+    };
+    setExceptions(prev => editingId
+      ? prev.map(e => e.id === editingId ? built : e)
+      : [...prev, built]
+    );
+    setShowModal(false);
+    setEditingId(null);
+    setForm({ type:"feriado", title:"", dateFrom:"", dateTo:"", employeeId:"", description:"" });
+  };
+
+  const upcoming = [...exceptions].sort((a,b) => a.dateFrom.localeCompare(b.dateFrom));
+
+  return (
+    <div className="p-6 flex flex-col gap-5">
+      <SectionHeader
+        title="Calendario de Excepciones"
+        sub="Feriados nacionales y vacaciones por colaborador"
+        action={
+          <PrimaryBtn onClick={openCreate}>
+            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4"/>
+            </svg>
+            Añadir Excepción
+          </PrimaryBtn>
+        }
+      />
+
+      <div className="grid grid-cols-3 gap-5">
+        {/* ── Calendar ── */}
+        <Card className="col-span-2 p-5">
+          {/* Month nav */}
+          <div className="flex items-center justify-between mb-5">
+            <button onClick={() => setMonthOffset(o => o-1)}
+              className="w-8 h-8 rounded-xl flex items-center justify-center text-gray-400 hover:text-gray-700 hover:bg-gray-100 transition-all">
+              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7"/></svg>
+            </button>
+            <p className="text-sm font-semibold text-gray-900">{MONTHS[m-1]} {y}</p>
+            <button onClick={() => setMonthOffset(o => o+1)}
+              className="w-8 h-8 rounded-xl flex items-center justify-center text-gray-400 hover:text-gray-700 hover:bg-gray-100 transition-all">
+              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7"/></svg>
+            </button>
+          </div>
+
+          {/* Day headers */}
+          <div className="grid grid-cols-7 mb-1">
+            {DAYS.map(d => (
+              <div key={d} className="text-center py-1.5">
+                <span className="text-[10px] font-bold text-gray-400 uppercase tracking-wider">{d}</span>
+              </div>
+            ))}
+          </div>
+
+          {/* Grid */}
+          <div className="grid grid-cols-7 gap-1">
+            {cells.map((day, i) => {
+              if (day === null) return <div key={`e${i}`} className="min-h-[60px]"/>;
+              const excs = excsOn(day);
+              const tod  = isToday(day);
+              return (
+                <div key={day}
+                  className={`rounded-xl min-h-[60px] flex flex-col gap-1 p-1.5 transition-colors ${!tod ? "hover:bg-gray-50" : ""}`}
+                  style={tod ? { background:"rgba(41,137,216,0.07)", border:"1.5px solid rgba(41,137,216,0.22)" } : { border:"1px solid transparent" }}>
+                  <span className={`text-[11px] font-semibold w-6 h-6 flex items-center justify-center rounded-full mx-auto ${tod ? "text-white" : "text-gray-500"}`}
+                        style={tod ? { background:"linear-gradient(135deg,#1e5799,#2989d8)" } : {}}>
+                    {day}
+                  </span>
+                  <div className="flex flex-col gap-0.5">
+                    {excs.map(e => {
+                      const mt = EXC_META[e.type];
+                      return (
+                        <div key={e.id} className="rounded text-[9px] font-semibold px-1 py-0.5 truncate leading-tight"
+                             style={{ background:mt.chip, color:mt.color }}>
+                          {e.type==="feriado" ? "Feriado" : (e.employeeName?.split(" ")[0] ?? "Vacac.")}
+                        </div>
+                      );
+                    })}
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+
+          {/* Legend */}
+          <div className="flex items-center gap-5 mt-4 pt-4" style={{ borderTop:"1px solid #f1f5f9" }}>
+            {(Object.entries(EXC_META) as [ExceptionType, typeof EXC_META.feriado][]).map(([key, mt]) => (
+              <div key={key} className="flex items-center gap-1.5">
+                <div className="w-2.5 h-2.5 rounded-sm" style={{ background:mt.dot }}/>
+                <span className="text-[11px] text-gray-500">{mt.label}</span>
+              </div>
+            ))}
+          </div>
+        </Card>
+
+        {/* ── Upcoming exceptions ── */}
+        <div className="flex flex-col gap-3">
+          <p className="text-sm font-semibold text-gray-900 px-1">Próximas excepciones</p>
+          {upcoming.length === 0 && (
+            <Card className="p-8 flex flex-col items-center gap-2.5">
+              <svg className="w-9 h-9" fill="none" stroke="#d1d5db" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"/>
+              </svg>
+              <p className="text-xs text-gray-400 text-center">Sin excepciones configuradas</p>
+            </Card>
+          )}
+          {upcoming.map(exc => {
+            const mt = EXC_META[exc.type];
+            return (
+              <Card key={exc.id} className="p-4 flex flex-col gap-2.5">
+                <div className="flex items-start justify-between gap-2">
+                  <div className="flex items-center gap-2.5">
+                    <div className="w-8 h-8 rounded-xl flex items-center justify-center flex-shrink-0"
+                         style={{ background:mt.chip }}>
+                      <div className="w-2.5 h-2.5 rounded-full" style={{ background:mt.dot }}/>
+                    </div>
+                    <div className="flex flex-col gap-0.5">
+                      <p className="text-xs font-semibold text-gray-800 leading-tight">{exc.title}</p>
+                      <span className="text-[10px] font-semibold px-2 py-0.5 rounded-md w-fit"
+                            style={{ background:mt.bg, color:mt.color }}>{mt.label}</span>
+                    </div>
+                  </div>
+                  <div className="flex items-center gap-2 flex-shrink-0">
+                    <button onClick={() => openEdit(exc)}
+                      className="text-[11px] font-medium transition-colors" style={{ color:"#2989d8" }}>Editar</button>
+                    <span className="text-gray-200 text-xs">·</span>
+                    <button onClick={() => setExceptions(p => p.filter(e => e.id !== exc.id))}
+                      className="text-gray-300 hover:text-red-400 transition-colors text-xs leading-none">✕</button>
+                  </div>
+                </div>
+                <div className="flex flex-col gap-0.5 pl-10">
+                  <span className="text-xs font-mono text-gray-400">
+                    {fmtDate(exc.dateFrom)}{exc.dateFrom !== exc.dateTo ? ` → ${fmtDate(exc.dateTo)}` : ""}
+                  </span>
+                  {exc.employeeName && (
+                    <div className="flex items-center gap-1.5">
+                      <Avatar name={exc.employeeName} size="sm"/>
+                      <span className="text-xs text-gray-600 font-medium truncate">{exc.employeeName}</span>
+                    </div>
+                  )}
+                  {exc.description && <p className="text-[11px] text-gray-400">{exc.description}</p>}
+                </div>
+              </Card>
+            );
+          })}
+        </div>
+      </div>
+
+      {/* ── Modal ── */}
+      {showModal && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4"
+             style={{ background:"rgba(7,15,30,0.65)" }}
+             onClick={e => { if (e.target === e.currentTarget) setShowModal(false); }}>
+          <div className="w-full max-w-md rounded-2xl p-6 flex flex-col gap-4"
+               style={{ backdropFilter:"blur(16px)", WebkitBackdropFilter:"blur(16px)",
+                        background:"rgba(255,255,255,0.92)", border:"1px solid rgba(255,255,255,0.6)",
+                        boxShadow:"0 25px 60px rgba(7,15,30,0.35)" }}>
+            {/* Header */}
+            <div className="flex items-center justify-between">
+              <p className="text-base font-semibold text-gray-900">{editingId ? "Editar Excepción" : "Nueva Excepción"}</p>
+              <button onClick={() => setShowModal(false)}
+                className="w-7 h-7 rounded-lg flex items-center justify-center text-gray-400 hover:bg-gray-100 hover:text-gray-600 transition-all">
+                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12"/></svg>
+              </button>
+            </div>
+
+            {/* Type toggle */}
+            <div className="flex flex-col gap-1.5">
+              <label className="text-[10px] font-semibold text-gray-400 uppercase tracking-wider">Tipo</label>
+              <div className="grid grid-cols-2 gap-2">
+                {(["feriado","vacaciones"] as const).map(t => {
+                  const mt = EXC_META[t];
+                  return (
+                    <button key={t} onClick={() => setForm(f => ({ ...f, type:t }))}
+                      className="py-2.5 rounded-xl text-sm font-medium transition-all border"
+                      style={form.type===t
+                        ? { background:mt.chip, color:mt.color, borderColor:mt.dot }
+                        : { background:"transparent", color:"#6b7280", borderColor:"#e5e7eb" }}>
+                      {mt.label}
+                    </button>
+                  );
+                })}
+              </div>
+            </div>
+
+            {/* Title */}
+            <div className="flex flex-col gap-1.5">
+              <label className="text-[10px] font-semibold text-gray-400 uppercase tracking-wider">Título</label>
+              <input type="text" value={form.title}
+                onChange={e => setForm(f => ({ ...f, title:e.target.value }))}
+                placeholder={form.type==="feriado" ? "Ej: Día de la Independencia" : "Ej: Vacaciones anuales"}
+                className={inputCls}/>
+            </div>
+
+            {/* Date range */}
+            <div className="grid grid-cols-2 gap-3">
+              <div className="flex flex-col gap-1.5">
+                <label className="text-[10px] font-semibold text-gray-400 uppercase tracking-wider">Fecha inicio</label>
+                <input type="date" value={form.dateFrom}
+                  onChange={e => setForm(f => ({ ...f, dateFrom:e.target.value }))} className={inputCls}/>
+              </div>
+              <div className="flex flex-col gap-1.5">
+                <label className="text-[10px] font-semibold text-gray-400 uppercase tracking-wider">Fecha fin</label>
+                <input type="date" value={form.dateTo}
+                  onChange={e => setForm(f => ({ ...f, dateTo:e.target.value }))} className={inputCls}/>
+              </div>
+            </div>
+
+            {/* Employee (vacaciones only) */}
+            {form.type==="vacaciones" && (
+              <div className="flex flex-col gap-1.5">
+                <label className="text-[10px] font-semibold text-gray-400 uppercase tracking-wider">Colaborador</label>
+                <select value={form.employeeId}
+                  onChange={e => setForm(f => ({ ...f, employeeId:e.target.value }))} className={inputCls}>
+                  <option value="">Seleccionar colaborador</option>
+                  {EMP_DATA.filter(e => e.status==="activo").map(e => (
+                    <option key={e.id} value={e.id}>{e.name}</option>
+                  ))}
+                </select>
+              </div>
+            )}
+
+            {/* Description */}
+            <div className="flex flex-col gap-1.5">
+              <label className="text-[10px] font-semibold text-gray-400 uppercase tracking-wider">
+                Descripción <span className="text-gray-300 normal-case font-normal">(opcional)</span>
+              </label>
+              <textarea value={form.description} rows={2}
+                onChange={e => setForm(f => ({ ...f, description:e.target.value }))}
+                placeholder="Notas adicionales..."
+                className={`${inputCls} resize-none`}/>
+            </div>
+
+            {/* Actions */}
+            <div className="flex items-center gap-2 pt-1">
+              <PrimaryBtn onClick={submit}>
+                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7"/></svg>
+                {editingId ? "Guardar cambios" : "Guardar excepción"}
+              </PrimaryBtn>
+              <button onClick={() => setShowModal(false)}
+                className="px-4 py-2 rounded-xl text-sm font-medium text-gray-500 hover:bg-gray-100 transition-all">
+                Cancelar
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+    </div>
+  );
+}
+
 // ─── Main Export ──────────────────────────────────────────────────────────────
 
 export default function AdminDashboard() {
@@ -1231,6 +1550,7 @@ export default function AdminDashboard() {
     sitios:     { title:"Sitios de trabajo",     sub:`${SITES_DATA.length} sitios configurados`   },
     reportes:   { title:"Reportes",              sub:"Generación y exportación de datos"      },
     ajustes:    { title:"Ajustes",               sub:"Configuración de la plataforma"         },
+    calendario: { title:"Calendario de Excepciones", sub:"Feriados y vacaciones por colaborador" },
   };
 
   const { title, sub } = PAGE_TITLES[activeView];
@@ -1312,6 +1632,7 @@ export default function AdminDashboard() {
         {activeView === "sitios"     && <SitiosView/>}
         {activeView === "reportes"   && <ReportesView/>}
         {activeView === "ajustes"    && <AjustesView/>}
+        {activeView === "calendario" && <CalendarioView/>}
       </main>
     </div>
   );
