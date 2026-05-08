@@ -1,6 +1,6 @@
 # GOTEST — Contexto del proyecto
 
-> Última actualización: 2026-05-06
+> Última actualización: 2026-05-07 — Frontend real: Etapa 5/5 completada ✅
 
 ---
 
@@ -33,21 +33,67 @@ Fuente: Poppins
 GOTEST/
 ├── api_contract.md          # Contrato REST completo
 ├── CONTEXTO.md              # Este archivo
-├── mockups/
-│   ├── AdminDashboard.tsx   # Dashboard admin (mock con data estática)
-│   ├── LoginPage.tsx        # Login desktop
-│   ├── MobileAuth.tsx       # Login móvil (glass dark)
-│   ├── MobilePunch.tsx      # App marcación móvil
-│   └── lib/
-│       └── geofence.ts      # Haversine — distancia GPS
-├── pwa-config/
-│   ├── manifest.json
-│   └── next.config.ts
-├── viewer/                  # Visualizador de mockups (Vite + Tailwind)
-│   └── src/App.tsx
-└── client/
-    ├── dist/                # Build compilado del viewer
-    └── imagenes/            # Assets (logo, fotos mock)
+├── mockups/                 # Diseños originales (referencia, no modificar)
+│   ├── AdminDashboard.tsx
+│   ├── LoginPage.tsx
+│   ├── MobileAuth.tsx
+│   ├── MobilePunch.tsx
+│   └── lib/geofence.ts
+├── pwa-config/              # manifest.json + next.config.ts (ref)
+├── viewer/                  # Visualizador de mockups legacy
+└── app/                     # ★ FRONTEND REAL (producción)
+    ├── src/
+    │   ├── components/
+    │   │   ├── admin/       # Avatar, Card, SectionHeader, PrimaryBtn
+    │   │   ├── auth/        # AuthGuard, AdminGuard, PasskeyRegisterModal
+    │   │   ├── punch/       # PunchCard, CameraModal
+    │   │   └── ErrorBoundary.tsx
+    │   ├── hooks/
+    │   │   ├── useAuth.ts
+    │   │   ├── useGeolocation.ts
+    │   │   ├── useIsMobile.ts
+    │   │   └── usePWAInstall.ts   # beforeinstallprompt → canInstall + install()
+    │   ├── lib/
+    │   │   ├── auth.ts       # detectIdentifierType, normalizeIdentifier
+    │   │   ├── device.ts     # getDeviceId() — fingerprint persistente
+    │   │   ├── geofence.ts   # checkGeofence() Haversine
+    │   │   └── webauthn.ts   # stepUpBiometrics() + registerPasskey()
+    │   ├── pages/
+    │   │   ├── LoginPage.tsx        # Router desktop/móvil
+    │   │   ├── login/
+    │   │   │   ├── DesktopLogin.tsx
+    │   │   │   └── MobileLogin.tsx  # + PasskeyRegisterModal post-login
+    │   │   ├── punch/PunchPage.tsx  # + "Instalar app" en tab Más (si canInstall)
+    │   │   └── admin/
+    │   │       ├── AdminPage.tsx    # Shell + sidebar + routing
+    │   │       └── views/
+    │   │           ├── DashboardView.tsx
+    │   │           ├── AsistenciaView.tsx
+    │   │           ├── EmpleadosView.tsx
+    │   │           ├── SitiosView.tsx    # toggle persiste vía updateSite
+    │   │           ├── ReportesView.tsx
+    │   │           ├── AjustesView.tsx
+    │   │           └── CalendarioView.tsx
+    │   ├── providers/
+    │   │   └── AuthProvider.tsx     # AuthContext, useAuth(), JWT en localStorage
+    │   ├── services/
+    │   │   ├── api.ts               # fetch wrapper + buildQuery + ApiError
+    │   │   ├── auth.service.ts
+    │   │   ├── employees.service.ts
+    │   │   ├── exceptions.service.ts
+    │   │   ├── punches.service.ts
+    │   │   ├── reports.service.ts
+    │   │   ├── sites.service.ts     # + updateSite()
+    │   │   └── mocks/
+    │   │       ├── data.ts          # MOCK_SITES, MOCK_EMPLOYEES, MOCK_PUNCHES…
+    │   │       └── index.ts         # Handlers con delay 400ms + updateSite
+    │   ├── types/                   # auth (passkey?), employee, exception, punch, report, site (UpdateSiteRequest)
+    │   ├── router.tsx               # createBrowserRouter + AuthGuard + AdminGuard
+    │   └── main.tsx                 # + ErrorBoundary wrapper
+    ├── .env                         # VITE_USE_MOCKS=true
+    ├── .env.production              # VITE_USE_MOCKS=false
+    ├── vite.config.ts               # VitePWA + alias @/
+    └── dist/                        # Build de producción
 ```
 
 ---
@@ -65,6 +111,7 @@ Definido en `api_contract.md`. Base URL: `https://api.gotest.app/v1`
 | `POST /auth/register/verify` | Guarda credencial pública |
 | `GET /sites` | Lista sitios activos con coords y radio |
 | `GET /sites/{siteId}` | Sitio + turnos |
+| `PUT /sites/{siteId}` | Actualiza radio, estado activo/inactivo, turnos (admin) |
 | `POST /punches/presigned-url` | Genera URL S3 para subir selfie |
 | `POST /punches` | Registra marcación (valida geofence server-side) |
 | `GET /punches` | Historial del usuario autenticado |
@@ -86,65 +133,95 @@ WebAuthn es step-up justo antes del punch (no es el login inicial).
 
 ## Lo que está listo ✅
 
-### Mockups / diseño de pantallas
-- [x] `LoginPage.tsx` — login desktop, dual panel (brand + form), detecta RUT vs email automáticamente
-- [x] `MobileAuth.tsx` — login móvil glassmorphism dark; viewport corregido a `100dvh` (elimina scroll en mobile)
-- [x] `MobilePunch.tsx` — app marcación completa:
-  - Flujo 4 pasos: entrada → salida colación → regreso colación → salida
-  - Reloj en tiempo real
-  - Geofence badge (verde/rojo) + bloqueo si fuera de radio
-  - WebAuthn biometric step-up (con fallback mock si no hay `PublicKeyCredential`)
-  - Camera modal: preview con guía óvalo, captura, confirmar/repetir, upload spinner
-  - Historial del día por turno
-  - Bottom tab nav (Asistencia / Historial / Más)
-- [x] `AdminDashboard.tsx` — dashboard admin completo (7 vistas):
-  - **Dashboard**: KPIs (activos/presentes/ausentes/alertas), gráfico barras apiladas semanal, asistencia por sitio, actividad reciente, tabla resumen
-  - **Asistencia**: filtros (fecha, sitio, estado, búsqueda), tabla paginada, export CSV client-side; columna "Verificación" con foto selfie (hover card glassmorphism dark)
-  - **Empleados**: refactorizado de modal a sub-vista inline (`list` ↔ `form`), tabla con filtros, estado passkey por empleado
-  - **Sitios**: cards con toggle activo/inactivo, barra asistencia, coords
-  - **Reportes**: panel configuración (tipo/rango/sitio), preview tabla, botones CSV/Excel
-  - **Ajustes**: tabs empresa/turnos/integraciones (tab "Seguridad" eliminado), toggles, API keys
-  - **Calendario** *(nuevo)*: vista de calendario mensual navegable, gestión CRUD de excepciones (feriados nacionales y vacaciones por colaborador), panel lateral "próximas excepciones", modal crear/editar con tipo, rango de fechas y selector de empleado
+### Mockups (referencia de diseño — `mockups/`)
+- [x] `LoginPage.tsx` — login desktop dual panel, detecta RUT vs email
+- [x] `MobileAuth.tsx` — login móvil glassmorphism dark, `100dvh`
+- [x] `MobilePunch.tsx` — flujo marcación 4 pasos completo
+- [x] `AdminDashboard.tsx` — dashboard admin 7 vistas con data hardcodeada
+
+### Frontend real — `app/` (★ producción)
+
+#### Etapa 1 — Infraestructura base ✅
+- [x] Vite 5 + React 18 + TypeScript + Tailwind CSS + vite-plugin-pwa 0.21
+- [x] `createBrowserRouter` con `AuthGuard` (empleados) y `AdminGuard` (admins)
+- [x] `AuthContext` + `useAuth()` — JWT en `localStorage`, persiste refresh
+- [x] `api.ts` — fetch wrapper con JWT automático, `ApiError`, `buildQuery()`
+- [x] Tipos TypeScript completos en `src/types/` (auth, employee, exception, punch, report, site)
+- [x] Todos los servicios con doble modo: `VITE_USE_MOCKS=true` (mocks) / `false` (real API)
+- [x] Mocks en `services/mocks/` con 9 empleados, 6 sitios, delay 400ms simulado
+- [x] PWA: manifest inline en `vite.config.ts`, Workbox NetworkFirst para API, StaleWhileRevalidate para fonts
+- [x] Alias `@/` → `src/`
+
+#### Etapa 2 — Login real ✅
+- [x] `LoginPage.tsx` — detecta mobile/desktop, redirige si ya autenticado
+- [x] `DesktopLogin.tsx` — form dual-panel, llama `authService.login()`, manejo error `INVALID_CREDENTIALS`
+- [x] `MobileLogin.tsx` — form glassmorphism dark, misma lógica auth
+- [x] Navegación post-login: admin → `/admin`, empleado → `/punch`
+
+#### Etapa 3 — Marcación real ✅
+- [x] `useGeolocation.ts` — `watchPosition` live, `enableHighAccuracy`, timeout 10s
+- [x] `device.ts` — `getDeviceId()` fingerprint hexadecimal persistente en localStorage
+- [x] `webauthn.ts` — `stepUpBiometrics()`: bypass automático en mock mode y si no hay `PublicKeyCredential`
+- [x] `CameraModal.tsx` — preview con guía óvalo, captura canvas, confirm/retake, blob output
+- [x] `PunchCard.tsx` — UI completo con props reales (geo, shift, loading, error, punchStep)
+- [x] `PunchPage.tsx` — flujo completo:
+  - Carga sitio del usuario (`sitesService.getSite`) + historial hoy (`punchesService.getPunches`)
+  - Geofence badge live: "Localizando…" → verde/rojo
+  - Punch: `stepUpBiometrics` → `openCameraModal` → `getPresignedUrl` → `uploadPhoto` → `createPunch`
+  - Logout funcional → `/login`
+
+#### Etapa 5 — Finalización ✅
+- [x] `WebAuthnRegisterModal.tsx` — modal biométrico post-login con `registerPasskey()`
+- [x] `MobileLogin.tsx` — muestra modal si `user.passkey === false` tras login exitoso
+- [x] `webauthn.ts` — `registerPasskey()`: bypass mock, real via `registerChallenge` + `registerVerify`
+- [x] `AuthUser.passkey?: boolean` — campo en tipo + mock devuelve `false` para empleados
+- [x] `sitesService.updateSite()` + mock handler — toggle en SitiosView ahora persiste
+- [x] `.env` / `.env.production` — `VITE_USE_MOCKS=true/false` + `VITE_API_URL`
+- [x] `ErrorBoundary.tsx` — captura errores React, muestra pantalla de recuperación
+- [x] `main.tsx` — app envuelta en ErrorBoundary
+- [x] `usePWAInstall.ts` — hook `beforeinstallprompt` → `canInstall` + `install()`
+- [x] `PunchPage.tsx` — botón "Instalar app" aparece en tab Más cuando PWA instalable
+
+#### Etapa 4 — Admin Dashboard real ✅
+- [x] `AdminPage.tsx` — shell con sidebar, `useAuth()` para nombre/email, logout funcional
+- [x] `DashboardView` — KPIs derivados de `reportsService` + `employeesService` + `sitesService`; gráfico semanal; asistencia por sitio; actividad reciente; tabla resumen hoy
+- [x] `AsistenciaView` — `reportsService.getReports(filters)` con filtros fecha/sitio/estado/búsqueda, tabla paginada, export CSV client-side, hover card foto selfie
+- [x] `EmpleadosView` — CRUD completo: `employeesService` create/update/delete; formulario con campos reales (`siteId`, `role`, passkey info); filtros búsqueda/sitio/estado
+- [x] `SitiosView` — `sitesService.getSites()` + conteo empleados por sitio derivado de `employeesService`; toggle estado (UI local)
+- [x] `ReportesView` — configura tipo/rango/sitio, llama `reportsService.getReports()`, preview tabla, export CSV client-side + `exportReports()` para .xlsx presigned URL
+- [x] `AjustesView` — tabs empresa/turnos/integraciones, formularios estáticos
+- [x] `CalendarioView` — CRUD completo con `exceptionsService`; calendario mensual navegable; modal crear/editar; panel "próximas excepciones"
 
 ### Lógica compartida
-- [x] `geofence.ts` — Haversine correcta, `checkGeofence()` retorna `{ isWithin, distanceMeters }`
-- [x] `api_contract.md` — Contrato REST completo con ejemplos request/response y errores
-- [x] PWA config — manifest.json + next.config.ts
-- [x] Viewer — app Vite para visualizar mockups
+- [x] `geofence.ts` — Haversine, `checkGeofence()` → `{ isWithin, distanceMeters }`
+- [x] `api_contract.md` — contrato REST completo
+- [x] Mocks end-to-end funcionales (toda la app opera sin backend)
 
 ---
 
 ## Lo que falta ❌
 
+### Frontend — pendiente
+- [ ] Notificaciones push PWA (`PushManager` + service worker handler)
+- [ ] Ajustes (empresa/turnos/integraciones) no conectados a API real — formularios estáticos
+- [ ] Probar contra API real con `VITE_USE_MOCKS=false` (cuando exista backend)
+
 ### Backend
-- [ ] Lambda functions (auth, punches, reports, sites)
+- [ ] Lambda functions (auth, punches, reports, sites, employees, exceptions)
 - [ ] DynamoDB: tabla `punches` (PK=userId, SK=timestamp, GSI siteId+date)
 - [ ] S3 buckets: `gotest-punches` (fotos, lifecycle 90d), `gotest-reports` (exports, lifecycle 24h)
 - [ ] API Gateway HTTP v2 + JWT Authorizer
 - [ ] Generación real de presigned URLs
 - [ ] Lógica cálculo HT / atrasos / HE en Lambda
-- [ ] Generación real .xlsx (reports/export)
+- [ ] Generación real .xlsx (`GET /reports/export`)
 - [ ] CloudWatch alarmas (error rate >1%, latencia p99 >2s)
-
-### Frontend real (producción)
-- [ ] Proyecto React/Next.js real (actualmente solo mockups estáticos con data hardcoded)
-- [ ] Login real → llamada `POST /auth/login` → guardar JWT
-- [ ] Registro passkey en primer login (`/auth/register/challenge` + `/auth/register/verify`)
-- [ ] Geolocalización real → `navigator.geolocation.watchPosition()`
-- [ ] Upload real selfie → `PUT {presignedUrl}` con blob
-- [ ] Llamada real `POST /punches` con `photoKey` + `webAuthnToken`
-- [ ] Historial real desde `GET /punches`
-- [ ] Dashboard admin conectado a `GET /reports`
-- [ ] Export Excel real desde `GET /reports/export`
-- [ ] CRUD empleados real (actualmente modal no persiste)
-- [ ] CRUD sitios real (toggle no persiste)
-- [ ] Notificaciones push PWA
+- [ ] `PUT /sites/{id}` endpoint (toggle activo/inactivo desde admin)
 
 ### Testing & DevOps
-- [ ] Tests unitarios (geofence, utils)
-- [ ] Tests E2E
+- [ ] Tests unitarios (geofence, auth utils)
+- [ ] Tests E2E (flujo marcación, login, admin CRUD)
 - [ ] CI/CD pipeline
-- [ ] Deploy (Amplify / Vercel / S3+CloudFront para frontend)
+- [ ] Deploy frontend (Amplify / Vercel / S3+CloudFront)
 
 ---
 

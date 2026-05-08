@@ -31,10 +31,13 @@ Autenticación clásica con credenciales. Acepta RUT o correo como identificador
     "email": "usuario@empresa.cl",
     "name": "Cristian Florez Revilla",
     "role": "employee",
-    "siteId": "site_01"
+    "siteId": "site_01",
+    "passkey": false
   }
 }
 ```
+> `role`: `"employee"` | `"supervisor"` | `"admin"`  
+> `passkey`: `true` si el dispositivo ya tiene passkey registrada. El cliente móvil muestra el flujo de registro biométrico si es `false`.
 
 **Response 401**
 ```json
@@ -111,7 +114,8 @@ Verifica assertion de WebAuthn y retorna JWT.
     "rut": "12345678-9",
     "name": "Cristian Florez Revilla",
     "role": "employee",
-    "siteId": "site_01"
+    "siteId": "site_01",
+    "passkey": true
   }
 }
 ```
@@ -182,7 +186,9 @@ Guarda la credencial pública del dispositivo.
 ## Sites
 
 ### GET /sites
-Retorna todos los sitios activos con coordenadas y radio.
+Retorna sitios con coordenadas y radio.  
+- Empleados y supervisores: solo sitios `active: true`  
+- Admins: todos los sitios (activos e inactivos)
 
 **Headers:** `Authorization: Bearer <jwt>`
 
@@ -230,6 +236,28 @@ Retorna un sitio específico.
   ],
   "active": true
 }
+```
+
+---
+
+### PUT /sites/{siteId}
+Actualiza configuración de un sitio (radio, estado activo/inactivo, turno).  
+**Requiere:** `role: admin`
+
+**Request** (todos los campos opcionales)
+```json
+{
+  "radiusMeters": 600,
+  "active": false,
+  "shifts": [
+    { "id": "shift_01", "name": "Turno Mañana", "start": "08:00", "end": "17:30", "breakMinutes": 60 }
+  ]
+}
+```
+
+**Response 200**
+```json
+{ "id": "site_01", "updated": true }
 ```
 
 ---
@@ -407,10 +435,12 @@ Lista empleados con filtros.
       "createdAt": "2026-01-15T00:00:00Z"
     }
   ],
+
   "nextCursor": null,
   "total": 9
 }
 ```
+> `role`: `"employee"` | `"supervisor"` | `"admin"`
 
 ---
 
@@ -429,6 +459,7 @@ Crea un nuevo empleado.
   "password": "temporal123"
 }
 ```
+> `role`: `"employee"` | `"supervisor"` | `"admin"`
 
 **Response 201**
 ```json
@@ -461,9 +492,11 @@ Actualiza datos de un empleado.
   "name": "Nombre Nuevo",
   "email": "nuevo@goalliance.cl",
   "siteId": "site_02",
+  "role": "supervisor",
   "status": "inactivo"
 }
 ```
+> `role`: `"employee"` | `"supervisor"` | `"admin"`
 
 **Response 200**
 ```json
@@ -663,6 +696,35 @@ Elimina una excepción.
 ```json
 { "id": "exc_03", "deleted": true }
 ```
+
+---
+
+## API externa — Feriados Chile
+
+El frontend consume directamente la API pública de boostr.cl para mostrar feriados nacionales en el CalendarioView. **No pasa por el backend GOTEST.**
+
+**Endpoint:** `GET https://api.boostr.cl/holidays.json`  
+**Auth:** ninguna (API pública)  
+**Caché sugerida:** 24h (los feriados no cambian en el día)
+
+**Response 200**
+```json
+{
+  "status": "success",
+  "data": [
+    {
+      "date": "2026-01-01",
+      "title": "Año Nuevo",
+      "type": "Civil",
+      "inalienable": true,
+      "extra": "Civil e Irrenunciable"
+    }
+  ]
+}
+```
+> `type`: `"Civil"` | `"Religioso"`  
+> `inalienable`: feriado irrenunciable según ley chilena  
+> Los feriados de esta API son **read-only** en la UI — no se crean ni modifican vía `POST /exceptions`.
 
 ---
 

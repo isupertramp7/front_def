@@ -36,7 +36,14 @@
       "PowerShell(Stop-Process *)",
       "Bash(timeout 5)",
       "Bash(Start-Sleep -Seconds 4)",
-      "Bash(Get-Content \"C:\\\\Users\\\\IVANGO~1\\\\AppData\\\\Local\\\\Temp\\\\claude\\\\C--Users-Ivan-Gonzalez-Desktop-GOTEST\\\\d2f2ca92-1d10-49a1-a9eb-3899b905d92e\\\\tasks\\\\bai37jo82.output\")"
+      "Bash(Get-Content \"C:\\\\Users\\\\IVANGO~1\\\\AppData\\\\Local\\\\Temp\\\\claude\\\\C--Users-Ivan-Gonzalez-Desktop-GOTEST\\\\d2f2ca92-1d10-49a1-a9eb-3899b905d92e\\\\tasks\\\\bai37jo82.output\")",
+      "Bash(dir \"C:\\\\Users\\\\Ivan Gonzalez\\\\Desktop\\\\GOTEST\\\\viewer\\\\public\")",
+      "Bash(dir \"C:\\\\Users\\\\Ivan Gonzalez\\\\Desktop\\\\GOTEST\\\\client\")",
+      "Bash(copy *)",
+      "PowerShell(New-Item *)",
+      "Bash(dir \"C:\\\\Users\\\\Ivan Gonzalez\\\\Desktop\\\\GOTEST\\\\mockups\")",
+      "Bash(xargs cat)",
+      "Bash(xargs grep -l \"Site\")"
     ]
   }
 }
